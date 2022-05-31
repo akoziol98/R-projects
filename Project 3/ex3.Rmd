@@ -1,0 +1,1161 @@
+---
+title: "Exercise III"
+description: |
+  Linear model
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+<style>
+    div.note {
+        font-size: 1em;
+        background-color: #F5F5F5;
+        padding: .5em 1em .5em 1em;
+        border-left: .25em solid black;
+        margin-top: 2em;
+        margin-bottom: 2em;
+    }
+</style>
+
+
+<hr>
+
+```{r setup}
+knitr::opts_chunk$set(
+    fig.width = 6,
+    fig.asp   = 1,
+    fig.align = "center",
+    message   = FALSE,
+    warning   = FALSE
+)
+```
+
+```{r packages_and_settings}
+
+library(tidyverse)
+library(broom)      # for extracting tidy data frames from statistical objects
+library(car)        # general functions related to linear models, in particular Anova function
+library(heplots)    # for eta-square calculations, i.e. etasq function
+library(emmeans)    # for pairwise contrasts
+library(gt)         # for making nice tables
+library(effsize)    # for Cohen's d and Glass' delta
+library(sandwich)   # For heteroscedasticity-consistent variance-covariance estimators
+library(lmtest)     # For regression coefficients tests with custom variance-covariance matrices, i.e. coeftest function
+library(simpleboot) # For easy bootstraping of regression models
+library(lme4)
+library(lmerTest)
+library(rcompanion)
+library(interactions)
+library(ggplot2)
+library(ggpubr)
+library(e1071)
+library(DescTools)
+library(MuMIn)
+## GGplot settings
+theme_set(theme_bw())
+```
+
+
+# Pen-and-paper problems
+
+## 1. (2 points)
+
+Let:
+
+$$
+\mathbf{X} = 
+\begin{pmatrix}
+    1 & 3 \\
+    2 & 2 \\
+    4 & 3 \\
+    2 & 0
+\end{pmatrix}
+$$
+
+* Calculate $\mathbf{X}^\top\mathbf{X}$ and calculate its determinant 
+   (you can do this with a simple function in `R`, examples are in one of the notebooks and in HW2 solutions).
+   
+Answer:
+
+$$
+\mathbf{X}^\top = 
+\begin{pmatrix}
+    1 & 2 & 4 & 2\\
+    3 & 2 & 3 & 0
+\end{pmatrix}
+\\\mathbf{X}^\top\mathbf{X} = 
+\begin{pmatrix}
+    1 & 2 & 4 & 2\\
+    3 & 2 & 3 & 0
+\end{pmatrix}
+\begin{pmatrix}
+    1 & 3 \\
+    2 & 2 \\
+    4 & 3 \\
+    2 & 0
+\end{pmatrix} =
+\\\begin{pmatrix}
+    1*1 + 2*2 + 4*4 + 2*2 & 1*3 + 2*2 + 4*3 + 2*0 \\
+    3*1 + 2*2 + 3*4 + 0*2 & 3*3 + 2*2 + 3*3 + 0*0  
+\end{pmatrix} = 
+\\\mathbf{X}^\top\mathbf{X} = 
+\begin{pmatrix}
+    25 & 19 \\
+    19 & 22
+\end{pmatrix}
+$$
+
+``` {r}
+X <- matrix(c(
+    25, 19,
+    19, 22
+), byrow = TRUE, ncol = 2L)
+
+det(X)
+```
+
+Determinant of this matrix is 189.
+
+
+* What are dimensions of $\mathbf{X}^\top\mathbf{X}$?
+
+$X\in\mathbb{R}^{2x2}$
+
+* Is $\mathbf{X}^\top\mathbf{X}$ of full rank?
+
+Matrix $\mathbf{X}^\top\mathbf{X}$ is square and its determinant is not 0, so it is of full rank  
+
+* What does it tell you about column rank of $\mathbf{X}$?
+
+X is a matrix over the real numbers, so
+$\text{rank}(\mathbf{X}^\top\mathbf{X}) = \text{rank}(\mathbf{X})$
+
+$\mathbf{X}^\top\mathbf{X}$ is of full rank, so $\mathbf{X}$ is also of full rank. Therefore, if $\mathbf{X}$ is of full rank, it is also of full column rank.
+
+* To what kinds of matrices important in statistics is $\mathbf{X}^\top\mathbf{X}$ related?
+
+$\mathbf{X}^\top\mathbf{X}$ is a matrix of sum-of-squares-and-cross-products and it is related to the regression analysis topic, specifically to variance-covariance matrix of the predictor variables.
+
+
+## 2. (2 points)
+
+Let $A_1, A_2, \ldots, A_n$ be $n$ independent events. Derive the most concise formula you can for the probability
+of an event that at least one of these events happens.
+
+ANSWER:
+
+Probability that none of the events $A_1, \ldots A_n$ happens:
+
+$Pr(A_1^c \cap A_2^c \cap \ldots \cap A_n^c)$
+
+Probability of an event that at least one of these events happens
+
+$$
+Pr(A_1^c \cap A_2^c \cap \ldots \cap A_n^c)^c = Pr(A_1 \cup A_2 \cup \ldots \cup A_n)
+$$
+
+
+## 3. (2 points)
+
+Consider the following (non-linear) regression equation:
+
+$$
+\hat{y}_i = B_0e^{b_1x_i}
+$$
+
+* In what scale (under what transformation) is the above equation linear. Write down this equation.
+
+Log transformation using natural logarithm
+
+$$
+\hat{y}_i = B_0e^{b_1x_i}
+\\ln(\hat{y}_i) = ln(B_0e^{b_1x_i})
+\\ln(\hat{y}_i) = ln(B_0) + ln(e^{b_1x_i})
+\\ln(\hat{y}_i) = ln(B_0) + b_1x_i 
+$$
+
+
+* Write down the formula for $y_i$ in the linear scale (add the error term $u_i$) and convert back to the original scale.
+
+Applying $e$ to both sides of the equation
+
+$$
+ln(\hat{y}_i) = ln(B_0) + b_1x_i + u_i
+\\e^{ln(\hat{y}_i)} = e^{ln(B_0) + b_1x_i + u_i}
+\\e^{ln(\hat{y}_i)} = e^{ln(B_0)} * e^{b_1x_i+u_i}
+\\\hat{y}_i = B_0  e^{b_1x_i+u_i}
+\\\hat{y}_i = B_0  e^{b_1x_i} e^{u_i}
+$$
+
+* Is there any important qualitative difference between how the error term affect the result in the linear scale
+  and original scale?
+  
+In original scale, error term affects the result more, as increasing $u_i$ by 1 multiplies $y$ by $e$. In the linear scale increasing $u_i$ by 1 increases $y$ by $1$. It means that in linear scale the model is linear and additive and in original scale it is multiplicative.
+  
+* How does $\hat{y}_i$ change when $x_i$ increases by $1$.
+
+For linear regression:
+
+Under the assumption that all other values remain the same, increasing $x_i$ by $1$ increases $\hat{y}_i$ by $b_1$.
+
+For exponential regression:
+
+Under the assumption that all other values remain the same, increasing $x_i$ by $1$ value of $\hat{y}_i$ is multiplied by $e^{b_1}$.
+
+
+## 4. (2 points)
+
+In this exercise we will derive a coding scheme known as Helmert coding 
+(or reversed Helmert coding, opinions tend to differ). For simplicity we will do this only for three groups.
+This coding scheme should yield regression coefficients with the following interpretations:
+
+* $b_0$ should be equal to the arithmetic average of group means.
+* $b_1$ should be equal to the difference between the second and the first group.
+* $b_2$ should be equal to the difference between the third group and the average of the means in the first two groups.
+* Test your result using the following code.
+
+$$
+\textbf {W} = \begin{pmatrix}
+    \frac {1}{3} & -1 & -\frac {1}{2} \\
+    \frac {1}{3} & 1 & -\frac {1}{2} \\
+    \frac {1}{3} & 0 & 1
+\end{pmatrix}
+$$
+
+```{r pen_and_paper_4_test}
+# DEFINE THE HYPOTHESIS MATRIX HERE
+W <- matrix(c(
+    1/3, -1, -1/2,
+    1/3, 1, -1/2,
+    1/3, 0, 1
+), ncol = 3)
+
+# CONTRAST MATRIX (INVERSE OF W)
+C <- matrix(c(
+    1, 1, 1,
+    -1/2, 1/2, 0,
+    -1/3, -1/3, 2/3
+), ncol = 3) 
+
+
+model <- lm(Sepal.Length ~ Species, data = iris, contrasts = list(Species = C[, -1]))
+coef(model)
+
+# COMPARE TO OBSERVED GROUP MEANS
+M <- tapply(iris$Sepal.Length, iris$Species, mean)
+```
+
+
+## 5. (2 points)
+
+Let $X_1, X_2, X_3, X_4, X_5, X_6$ be six measurements (realizations of six random variables).
+
+* Write down variance-covariance matrix for the vector of the six measurements assuming they correspond to different subjects.
+
+$$
+\text{Var}[\mathbf{x}] =
+\begin{pmatrix}
+\text{Var}[\mathbf{X_1}] & \text{Cov}[\mathbf{X_1, X_2}] & \text{Cov}[\mathbf{X_1, X_3}] & \text{Cov}[\mathbf{X_1, X_4}] & \text{Cov}[\mathbf{X_1, X_5}] & \text{Cov}[\mathbf{X_1, X_6}]\\
+\text{Cov}[\mathbf{X_2, X_1}] & \text{Var}[\mathbf{X_2}] & \text{Cov}[\mathbf{X_2, X_3}] & \text{Cov}[\mathbf{X_2, X_4}] & \text{Cov}[\mathbf{X_2, X_5}] & \text{Cov}[\mathbf{X_2, X_6}]\\
+\text{Cov}[\mathbf{X_3, X_1}] & \text{Cov}[\mathbf{X_3, X_2}] & \text{Var}[\mathbf{X_3}] & \text{Cov}[\mathbf{X_3, X_4}] & \text{Cov}[\mathbf{X_3, X_5}] & \text{Cov}[\mathbf{X_3, X_6}]\\
+\text{Cov}[\mathbf{X_4, X_1}] & \text{Cov}[\mathbf{X_4, X_2}] & \text{Cov}[\mathbf{X_4, X_3}] & \text{Var}[\mathbf{X_4}] & \text{Cov}[\mathbf{X_4, X_5}] & \text{Cov}[\mathbf{X_4, X_6}]\\
+\text{Cov}[\mathbf{X_5, X_1}] & \text{Cov}[\mathbf{X_5, X_2}] & \text{Cov}[\mathbf{X_5, X_3}] & \text{Cov}[\mathbf{X_5, X_4}] & \text{Var}[\mathbf{X_5}] & \text{Cov}[\mathbf{X_5, X_6}]\\
+\text{Cov}[\mathbf{X_6, X_1}] & \text{Cov}[\mathbf{X_6, X_2}] & \text{Cov}[\mathbf{X_6, X_3}] & \text{Cov}[\mathbf{X_6, X_4}] & \text{Cov}[\mathbf{X_6, X_5}] & \text{Var}[\mathbf{X_6}]
+\end{pmatrix}
+$$
+
+  You may assume that they may have different variances.
+* Write down variance-covariance matrix for the vector of the six measurements assuming that the first three belong
+  to one subject and the last three to another subject. Assume that variances/covariances within the subject are the same
+  and that measurements for different subjects are independent.
+  
+$$
+\text{Var}[\mathbf{x}] =
+\begin{pmatrix}
+\text{Var}[\mathbf{X_1}] & \text{Var}[\mathbf{X_1}] & \text{Var}[\mathbf{X_1}] & 0 & 0 & 0\\
+\text{Var}[\mathbf{X_2}] & \text{Var}[\mathbf{X_2}] & \text{Var}[\mathbf{X_2}] & 0 & 0 & 0\\
+\text{Var}[\mathbf{X_3}] & \text{Var}[\mathbf{X_3}] & \text{Var}[\mathbf{X_3}] & 0 & 0 & 0\\
+0 & 0 & 0 & \text{Var}[\mathbf{X_4}] & \text{Var}[\mathbf{X_4}] & \text{Var}[\mathbf{X_4}]\\
+0 & 0 & 0 & \text{Var}[\mathbf{X_5}] & \text{Var}[\mathbf{X_5}] & \text{Var}[\mathbf{X_5}]\\
+0 & 0 & 0 & \text{Var}[\mathbf{X_6}] & \text{Var}[\mathbf{X_6}] & \text{Var}[\mathbf{X_6}]
+\end{pmatrix}
+$$
+
+* What kind of model you may use to deal with this kind of correlation structure?
+
+Model with random effects for experiments with repeated measurements
+
+
+# Coding problems
+
+## 1. (2 points)
+
+Use `Cowles` dataset from `carData` package. It is a very simple dataset on psychological correlates of volunteering
+(see `?Cowles` for details). Build an appropriate statistical model for explaining `volunteer` variable.
+Report your results properly and try to visualize your results in a legible manner.
+
+          
+```{r P1}
+data(Cowles)
+(Cowles <- tibble(Cowles))
+Cowles <- Cowles %>% mutate(
+    volunteerYes = ifelse(volunteer == "yes", 1, 0))
+```
+
+
+``` {r}
+ggplot(Cowles, aes(x = extraversion, fill = volunteer)) +
+  geom_histogram(position = "identity", alpha = 0.4)
+
+ggplot(Cowles, aes(x = neuroticism, fill = volunteer)) +
+  geom_histogram(position = "identity", alpha = 0.4)
+
+hist(Cowles$volunteerYes)
+```
+``` {r}
+ggplot(Cowles, aes(x=volunteer, y=neuroticism, fill=sex)) + 
+    geom_boxplot()
+
+ggplot(Cowles, aes(x=volunteer, y=extraversion, fill=sex)) + 
+    geom_boxplot()
+```
+
+``` {r}
+plot(Cowles$neuroticism, Cowles$extraversion, col = Cowles$volunteer)
+legend("topright",  title="Volunteer", legend=c("Yes", "No"),
+       fill=c("red", "black"), cex=0.9)
+```
+
+
+``` {r}
+model <- glm(volunteerYes ~ extraversion + neuroticism + sex, data = Cowles, family = binomial)
+summary(model)
+```
+
+Extraversion and sex seem to be significant, but let's include interactions
+
+``` {r}
+model2 <- update(model, ~ extraversion * neuroticism)
+summary(model2)
+```
+
+Significant extraversion:neuroticism interactions.
+
+``` {r}
+model3 <- update(model, ~ extraversion * sex)
+summary(model3)
+```
+``` {r}
+model4 <- update(model, ~ neuroticism * sex)
+summary(model4)
+```
+
+No significant interactions with sex
+
+We can see that there might be significant effect of extraversion and possibly weaker neuroticism and  neuroticism x extraversion interaction effect.
+
+Sex effect is a little weak but the following model seems to be the best
+
+``` {r}
+model5 <- glm(volunteerYes ~ extraversion * neuroticism + sex, data = Cowles, family = binomial)
+summary(model5)
+```
+
+``` {r}
+(emm <- emmeans(model5, c("extraversion", "neuroticism"), at = list(extraversion = 0:1, neuroticism = 0:1)))
+```
+
+``` {r}
+contrast(emm, method = list(
+    extraversion = list(
+        not.neurotic = c(-1, 1, 0, 0), 
+        neurotic = c(0, 0, -1, 1)
+    )
+), type = "response")
+```
+
+
+``` {r}
+emmeans(model5, c("extraversion", "neuroticism"), at = list(
+    extraversion = c(5, 10, 15, 23),
+    neuroticism = c(5, 10, 15, 24)
+), type = "response")
+```
+
+It seems that the biggest impact on volunteering has extraversion, but the more points in neuroticism, the less likely it is that person will volunteer even with high extraversion score
+
+``` {r}
+PseudoR2(model5, which = "Nagelkerke")
+```
+
+``` {r}
+model0 <- update(model5, ~ 1)
+lrtest(model5, model0)
+```
+
+``` {r}
+model5 %>%
+  confint()
+```
+
+Report:
+
+To study which factors were associated with volunteering in psychological research, a logistic regression model was fitted. The response variable (volunteer) was a dichotomous indicator of whether a given person volunteered or not. The predictors were extraversion (integer score in test), neuroticism (integer score in test) and sex (male, female). The model included also an interaction effect in order to study possible extraversion and neuroticism joint effect.
+
+Regression coefficients expressed in terms of odds-ratios with 95% asymptotic confidence intervals are:
+
+extraversion: 0.166816 (95% CI = [0.09374678,  0.241771712], p-value < 0.05)
+
+neuroticism: 0.110777 (95% CI = [0.03744357,  0.185227757], p-value < 0.05)
+
+sexmale: -0.247152 (95% CI = [-0.46642058, -0.028694911], p-value < 0.05)
+
+extraversion:neuroticism: -0.008552 (95% CI = [-0.01434742, -0.002833714], p-value < 0.05)
+
+Effects of extraversion and neuroticism were significantly positive, indicating that the more points in those scales, the more likely it is for this subject to volunteer (but with significant interactions, we can't conclude anything about main effects). Effect of sexMale was significantly negative, which means females are more likely to volunteer. However, there was also significant negative interaction of extraversion:neuroticism. In order to study closely interaction effect of extraversion and neuroticism, a test of contrast has been conducted. The results indicate that there is significant interaction effect of neuroticism and extraversion for all values and it can be suggested that the higher extraversion score and the lower neuroticism score, the more likely it is that a subject will volunteer. Also, the more points in neuroticism, the less likely it is that person will volunteer even with high extraversion score
+
+The model was assesed with Nagelkerke’s pseudo-$R^2$ and it was 3,37 and was significantly greater than 0 as indicated by likelihood ratio test comparing the model with a null (intercept-only) model, $\chi^2(1) = 36.066, p < 0.001$
+
+
+## 2. (2 points)
+
+Use `SLID` dataset from `carData` package. It is a dataset for 1994 wave 
+of the Canadian Survey of Labour and Income Dynamics (for the Ontario province).
+Use it to explain `wages` based on `education`, `age`, `sex` and `language`.
+Use the model to estimate potential income disparities with respect to `sex` and `language`
+while controlling for other covariates.
+
+Report your results properly and try to visualize your main findings.
+
+If you transform the response variable you should write down the equation for $\hat{y}_i$ in the original scale.
+
+
+```{r P2}
+data(SLID)
+SLID <- tibble(SLID)
+SLID <- SLID[complete.cases(SLID),]
+SLID 
+```
+
+``` {r}
+hist(SLID$wages)
+```
+
+Residuals: 
+
+``` {r}
+res <- lm(wages ~ sex * language + education + age, data = SLID)
+```
+
+Normality:
+
+``` {r}
+ggqqplot(residuals(res))
+```
+
+Homogeneity of residuals:
+
+``` {r}
+plot(res, 3)
+```
+
+Histogram:
+
+``` {r}
+plotNormalHistogram(residuals(res))
+```
+
+``` {r}
+tibble(
+    x = fitted(res),
+    y = resid(res)
+) %>%
+    ggplot(aes(x = x, y = y)) +
+    geom_point() +
+    geom_smooth(method = "gam")
+```
+
+``` {r}
+skewness(SLID$wages)
+```
+
+'wages' variable is right-skewed. We should apply log transformation
+
+``` {r}
+hist(log(SLID$wages))
+skewness(log(SLID$wages))
+```
+
+It is fine now
+
+``` {r}
+model <- lm(wages ~ sex * language + education + age, data = SLID)
+summary(model)
+```
+``` {r}
+model1 <- lm(log(wages) ~ sex * language + education + age, data = SLID)
+summary(model1)
+```
+Language doesn't have significant effect, so I omit this variable to make the best possible model
+
+``` {r}
+model2 <- lm(log(wages) ~ sex + education + age, data = SLID)
+summary(model2)
+```
+
+Residual standard error decreased, 'wages' is not skewed anymore, so the model seems alright.
+
+There are no interactions and sex, education and age effects are significant.
+
+``` {r}
+etasq(model2, anova = TRUE, partial = TRUE, type = 2)
+```
+
+Estimation of main effect of sex, education and age without presence of interactions
+
+``` {r}
+pairs(emmeans(model2, "sex")) %>%
+    confint
+```
+
+``` {r}
+emmeans(model2, "education") %>%
+    confint
+```
+
+``` {r}
+emmeans(model2, "age") %>%
+    confint
+```
+
+Report:
+
+To study which factors were associated with wage value, a correlational study has been conducted. The dependent variable (wages) was a continuous composite hourly wage rate. The main predictors in the model were language (English, French, Other) and sex (male, female) with controlling age (in years) and education (in years). The model did not include interaction effect between sex and language, as it was not significant.
+The dependent variable was right-skewed and since it was bounded from below by zero, log transformation was used for this variable.
+The main effects of sex, education and age were significant and calculated using estimated means. The main effect of sex (difference between male and female) was estimated (based on the models without the interaction term) to be -0.224 with 95% confidence interval equal to [-0.25,   -0.198].
+The main effect of education was estimated (based on the models without the interaction term) to be 2.62 with 95% confidence interval equal to [2.6, 2.64].
+The main effect of age was estimated (based on the models without the interaction term) to be 2.62 with 95% confidence interval equal to [2.6, 2.64].
+The equation for the model in the original scale was estimated as follows:
+
+$$
+log(\hat{y_i}) = 1.1201866 + 0.2242567*x1_i + 0.0549349*x2_i + 0.0176509*x3_i
+\\\hat{y_i} = e^{1.1201866}e^{0.2242567*x1_i}e^ {0.0549349*x2_i} e^{0.0176509*x3_i}
+$$ 
+
+($x1$ - sex, $x2$ - education, $x3$ - age)
+
+
+## 3. (2 points)
+
+Use `Baumann` data from `carData` package. It is a dataset with results of an experiment on the efficacy of three
+different teaching methods (`group` variables). Subjects were assigned randomly to experimental groups.
+Your response variable should be differences between post- and pre-tests (only $1$ and $2$, ignore post-test $3$).
+
+Estimate the efficacy of different methods. Remember that there are two measurements per subject.
+Report your results properly and try to visualize them.
+
+Are there both between-subject and within-subject effects here? If yes, then which is which?
+
+```{r P3}
+data(Baumann)
+(Baumann <- tibble(Baumann))
+```
+```{r xxx}
+D <- Baumann %>%
+    transmute(
+        group = group,
+        subject = row_number(),
+        x1 = post.test.1 - pretest.1,
+        x2 = post.test.2 - pretest.2
+    ) %>%
+    pivot_longer(x1:x2)
+```
+
+``` {r}
+ggplot(D, aes(x=name, y=value, fill=group)) + 
+    geom_boxplot()
+```
+``` {r}
+hist(D$value)
+```
+
+Residuals: 
+
+``` {r}
+res <- lmer(value ~ (1 | subject) + group * name, data = D)
+```
+
+Normality:
+
+``` {r}
+ggqqplot(residuals(res))
+```
+
+Histogram of residuals:
+
+``` {r}
+plotNormalHistogram(residuals(res))
+```
+
+
+``` {r}
+model <- lmer(value ~ (1 | subject) + group * name, data = D)
+summary(model)
+```
+``` {r}
+ranova(model)
+```
+
+``` {r}
+random <- ranef(model)$subject[["(Intercept)"]]
+qqPlot(random)
+```
+
+Distribution of estimated effects is normal.
+
+Random effects: Variance of subject-specific intercept components is clearly equal to 0 even without additional tests, so individual subject differences do not explain response variation.
+
+``` {r}
+Anova(model, type = 2)
+```
+Fixed effects: There are significant interactions, so simple effects tests are needed. Both group and name are significant
+
+``` {r}
+(emm <- emmeans(model, c("group", "name")))
+```
+
+``` {r}
+(posthoc <- contrast(emm, method = "pairwise", adjust = "holm"))
+```
+
+``` {r}
+emm %>%
+    tidy(conf.int = TRUE) %>%
+    ggplot(aes(x = name, y = estimate, group = group, color = group)) +
+    geom_line(linetype = 2) +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = .05) +
+    geom_point(shape = 21, fill = "white", size = 3) +
+    labs(x = "Name", y = "Estimated marginal mean", color = "Group")
+```
+
+``` {r}
+(emm2 <- emmeans(model, "group", by = "name"))
+```
+
+``` {r}
+contrast(emm2, method = "pairwise", adjust = "holm") 
+```
+In the first measurement, DRTA has clearly the biggest, but not significant value, but in the second measurement Strat takes the lead.
+
+``` {r}
+r.squaredGLMM(model)
+```
+
+Random effects - within subject effects are 0 and do not contribute to variance explanation. Between subject effects - fixed effects - alone explain variance in a somewhat good way.
+
+``` {r}
+ctr <- tidy(pairs(emm2, reverse = TRUE))
+eff <- tidy(eff_size(emm2, sigma = sigma(model), edf = df.residual(model)))
+ctr$cohen <- eff$estimate
+ctr$cohen
+```
+
+Report:
+
+To study which learning strategy is most effective, an experimental study has been conducted. The response variable (value) was a continuous score in post test. The subjects were split into three groups (Basal, DRTA, Strat) and measured in pre- and post tests. The mixed model was fixed controlling within- and between-subject effects.
+Random effects analysis indicates that individual differences between subjects were not significant (subject variance: 0, ranova test p-value = 1).
+Fixed effects analysis revealed that interaction between group and measurement number is significant, so post-hoc tests were conducted. 
+
+Post-hoc test studied differences between groups split by measurement. It showed that some learning system mattered in both measurements. In the first one, difference between Basal and DRTA and Basal with Strat was significant, indicating that Basal is significantly lower than other. In the second measurement, difference between Basal and Strat and DRTA with Strat was significant, suggesting that Strat is significantly bigger than other methods.
+
+Detailed results with estimate, p-value and Cohen's D:
+
+Name = x1:
+
+Basal - DRTA: -3.864 (p-value: <.0001, Cohen's D: -1.4317163)
+
+Basal - Strat: -2.455 (p-value: 0.0062, Cohen's D: -0.9095609)
+
+DRTA - Strat: 1.409 (p-value: 0.0858, Cohen's D: 0.5221554)
+
+Name = x2:
+
+Basal - DRTA: -0.864 (p-value: 0.2905, Cohen's D: -0.3200307)
+
+Basal - Strat: -3.136 (p-value: 0.0006, Cohen's D: -1.1622168)
+
+DRTA - Strat: -2.273 (p-value: 0.0121, Cohen's D: -0.8421861)
+
+Marginal $R^2 = 0.4041357$ indicates that 40% of variance of the response is explained by fixed effects. Conditional $R^2 = 0.4041357$ same as marginal $R^2$ suggests that random effects, so within-subject effects do not play a role in explaining variance of the response variable.
+
+
+## 4. (2 points)
+
+Use `Wool` dataset from `carData` package. It is an experiment on the durability of wool fabric under different conditions.
+The experiment has three factors (see `?Wool`). The response variable is `cycles` and experimental factors are
+`len`, `amp` and `load`.
+
+The problem is that there is only one observation per each combination
+of levels of the factors. Thus, it is not possible to fit a full-factorial ANOVA model and obtain valid standard errors.
+You will have to use a different strategy.
+
+The levels of factors are actually numeric, so instead of a typical ANOVA you may fit a standard linear model with continuous
+predictors (and possibly with interactions). However, remember that it is still an experiment, and in fact a balanced one,
+so you may use this fact to calculate very informative effect size measures for all factors
+(to see this calculate linear correlations between `len`, `amp` and `load`).
+
+Moreover, examine the distribution of the response as well as model residuals. If needed, you should consider
+a transformation of the response. As always, in the case of a transformed response, you should report your results
+in a way allows the reader to understand your results on the original scale of the response variable.
+In particular, you may try to visualize your results in the original scale.
+
+In general, try to report your results in a way that will allow to understand the results of the experiment.
+
+
+
+```{r P4}
+data(Wool)
+Wool <- tibble(Wool)
+
+# THE DESIGN OF THE EXPERIMENT; ONLY ONE OBSERVATION PER CONDITIOn
+with(Wool, table(amp, load, len))
+```
+``` {r}
+hist(Wool$cycles)
+```
+
+Residuals: 
+
+``` {r}
+res <- lm(cycles ~ len * amp * load, data = Wool)
+```
+
+Normality:
+
+``` {r}
+ggqqplot(residuals(res))
+```
+
+Homogeneity of residuals:
+
+``` {r}
+plot(res, 3)
+```
+
+Histogram:
+
+``` {r}
+plotNormalHistogram(residuals(res))
+```
+
+``` {r}
+tibble(
+    x = fitted(res),
+    y = resid(res)
+) %>%
+    ggplot(aes(x = x, y = y)) +
+    geom_point() +
+    geom_smooth(method = "gam")
+```
+
+``` {r} 
+ggplot(Wool)+
+  geom_point(aes(x = len, y = cycles, colour = factor(amp)), position = 'stack')+
+  geom_point(aes(x = len,  y = cycles, colour = factor(amp)), position = 'stack') + 
+  geom_point(aes(x = len, y = cycles, colour = factor(amp)), position = 'stack') +
+  facet_wrap(~load)
+```
+
+``` {r}
+skewness(Wool$cycles)
+```
+
+'cycles' variable is right-skewed. We should apply log transformation
+
+``` {r}
+hist(log(Wool$cycles))
+skewness(log(Wool$cycles))
+```
+
+``` {r}
+model <- lm(log(cycles) ~ len * (amp + load), data = Wool)
+summary(model)
+model_2 <- lm(log(cycles) ~ amp * (len + load), data = Wool)
+summary(model_2)
+```
+
+No significant interactions. We can remove them from the model
+
+``` {r}
+model1 <- lm(log(cycles) ~ load + len + amp, data = Wool)
+summary(model1)
+```
+
+``` {r}
+etasq(model1, anova = TRUE, partial = TRUE, type = 2)
+```
+
+Significant main effects of load, len, amp.
+
+Post-hoc tests:
+
+Main effects of len, amp, load:
+
+``` {r}
+Wool2 <- Wool 
+Wool2$len <- as.factor(Wool2$len)
+Wool2$load <- as.factor(Wool2$load)
+Wool2$amp <- as.factor(Wool2$amp)
+
+model2 <- lm(log(cycles) ~ load + len + amp, data = Wool2)
+```
+
+``` {r}
+pairs(emmeans(model2, "load"), reverse = TRUE) %>%
+  confint
+```
+
+``` {r}
+pairs(emmeans(model2, "len"), reverse = TRUE)%>%
+  confint
+```
+
+``` {r}
+pairs(emmeans(model2, "amp"), reverse = TRUE)%>%
+  confint
+```
+
+``` {r}
+ggqqplot(Wool$len)
+ggqqplot(Wool$load)
+ggqqplot(Wool$amp)
+```
+
+
+``` {r}
+model1 %>%
+  confint()
+```
+
+
+Report:
+
+To study which factors were associated with cycles failure, a linear regression model was fitted. The response variable (cycles) was a continuous indicator of number of cycles until failure. The factors were len (length of specimen (250, 300, 350 mm)), amp (amplitude of loading cycle (8, 9, 10 min)) and load (40, 45, 50g). The experiment explored combination of 3 factors at three levels, giving 27 unique combinations. The model did not include interaction effects, as they were not significant. The response variable (cycles) was right-skewed, so log transformation has been applied. Multiple R-squared:  0.9658, which indicates that the model explains a great amount of cycles variation. Obtained regression coefficients were:
+
+- load: -0.078524 with 95% CI = [-0.09662556, -0.06042224], p-value < 0.01
+
+- len: 0.016648 with 95% CI = [0.01483752,  0.01845785], p-value < 0.01
+
+- amp: -0.630866 with 95% CI = [-0.72137430, -0.54035774], p-value < 0.01
+
+The following regression model was acquired.
+
+$$
+log(\hat{y_i}) = 10.551813 - 0.078524*x1_i + 0.016648*x2_i -0.630866*x3_i
+\\\hat{y_i} = e^{10.551813}e^{-0.078524*x1_i}e^ {0.016648*x2_i} e^{-0.630866*x3_i}
+$$
+
+($x1$ - load, $x2$ - len, $x3$ - amp)
+
+
+## 5. (2 points)
+
+Use `TitanicSurvival` dataset from `carData` package (see `?TitanicSurvival`). Use it to find out who was most likely
+to survive the _Titanic_ catastrophe. The response is the dichotomous `survived` variable.
+
+For convenience, the dataset is assigned to `Titanic` variable.
+
+As always, report and describe your results properly. Try to visualize them if it may facilitate understanding.
+
+```{r P5}
+data(TitanicSurvival)
+(Titanic <- tibble(TitanicSurvival))
+Titanic <- Titanic[complete.cases(Titanic),]
+Titanic <- Titanic %>% mutate(
+    survivedYes = ifelse(survived == "yes", 1, 0),
+    sexFemale = ifelse(sex == "female", 1, 0),
+    class = as.numeric(factor(passengerClass, levels = c("1st","2nd","3rd"))))
+```
+``` {r}
+ggplot(Titanic, aes(x=survived, y=age, fill=sex)) + 
+    geom_boxplot()
+
+ggplot(Titanic, aes(x=survived, y=age, fill=passengerClass)) + 
+    geom_boxplot()
+```
+
+``` {r}
+ggplot(Titanic)+
+  geom_bar(aes(x = passengerClass, fill = sex), position = 'dodge')+
+  geom_bar(aes(x = passengerClass, fill = sex), position = 'dodge') + 
+  facet_wrap(~survived)
+```
+
+``` {r}
+ggplot(Titanic)+
+  geom_bar(aes(x = sex, fill = survived), position = 'dodge')+
+  geom_bar(aes(x = sex, fill = survived), position = 'dodge') 
+```
+
+``` {r}
+ggplot(data = Titanic, aes(x = age, fill = survived)) +
+  geom_density(alpha = 0.2)
+```
+
+
+
+``` {r}
+ggplot(Titanic)+
+  geom_bar(aes(x = passengerClass, fill = survived), position = 'dodge')+
+  geom_bar(aes(x = passengerClass, fill = survived), position = 'dodge') 
+```
+
+``` {r}
+table(Titanic$passengerClass, Titanic$sex, Titanic$survived)
+```
+
+``` {r}
+ggplot(data = Titanic, aes(x = age, y = ..count.., fill = survived)) +
+  geom_density(alpha = 0.2) +
+  facet_grid(passengerClass ~ sex)
+```
+
+From visualization we can suggest that female from 1st class is most likely to survive. But now let's build a proper logistic regression model
+
+``` {r}
+model <- glm(survivedYes ~ class + sexFemale + age, data = Titanic, family = binomial)
+summary(model)
+```
+
+The higher class and age the less chances to survive (significant negative coefficients). However, females are more likely to survive (significant positive coefficient).
+
+``` {r}
+model2 <- update(model, ~ sexFemale * class)
+summary(model2)
+```
+
+Interaction between sex and class is significant
+
+``` {r}
+model3 <- update(model, ~ age * class)
+summary(model3)
+```
+
+Age:class - no interactions
+
+``` {r}
+model4 <- update(model, ~ sexFemale * age)
+summary(model4)
+```
+
+sex:age - significant interactions
+
+``` {r}
+model5 <- glm(survivedYes ~ sexFemale * (class + age), data = Titanic, family = binomial)
+summary(model5)
+```
+
+``` {r}
+model_em <- glm(survivedYes ~ sexFemale * (passengerClass + age), data = Titanic, family = binomial)
+(emm <- emmeans(model_em, "passengerClass", by = "sexFemale"))
+```
+
+``` {r}
+pairs(emm, reverse = TRUE)
+```
+
+``` {r}
+(emm2 <- emmeans(model5, c("age", "sexFemale"), at = list(age = 0:1)))
+```
+
+``` {r}
+contrast(emm2, method = list(
+    age = list(
+        male = c(-1, 1, 0, 0), 
+        female = c(0, 0, -1, 1)
+    )
+), type = "response")
+```
+
+It seems that the age matters for males with a negative effect.
+
+``` {r}
+emmeans(model5, c("age", "sexFemale"), at = list(age = c(18,30, 40, 60)), type = "response")
+```
+
+Again, for males older age makes them less likely to survive. 
+
+``` {r}
+emmeans(model5, c("class", "sexFemale", "age"), at = list(class = c(1,2,3), age = c(18, 40, 60)), type = "response")
+```
+
+``` {r}
+emmeans(model5, c("age", "sexFemale", "class"), at = list(
+    class = c(1,2,3),
+    age = seq(15, 70, by = 1)
+), type = "response") %>%
+    tidy(conf.int = TRUE) %>%
+    mutate(gender = if_else(sexFemale == 1, "female", "male")) %>%
+    ggplot(aes(x = age, y = prob, color = gender, fill = gender, group = gender)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = asymp.LCL, ymax = asymp.UCL), alpha = .2) +
+    labs(x = "Age", y = "Probability of survival") + 
+    facet_wrap(~class)
+```
+
+``` {r}
+PseudoR2(model5, which = "Nagelkerke")
+model0 <- update(model5, ~ 1)
+lrtest(model5, model0)
+```
+
+``` {r}
+model5 %>%
+    confint
+```
+
+Report:
+
+To study which factors were associated with survival during Titanic catastrophe, a logistic regression model was fitted. The response variable (survived) was a dichotomous indicator of whether a given person survived or not. The predictors were age (in years), sex (male, female) and class (1st, 2nd, 3rd). The model included also an interaction effects in order to study possible age and class effects for each gender.
+
+Regression coefficients expressed in terms of odds-ratios with 95% asymptotic confidence intervals are:
+
+sexFemale: 4.77839441 (95% CI = [2.990552363, 6.70953713], p-value < 0.05)
+
+class: -0.79564251 (95% CI = [-1.064249622, -0.53378791], p-value < 0.05)
+
+age: -0.04412058 (95% CI = [-0.060748240, -0.02821369], p-value < 0.05)
+
+sexFemale:class: -1.23217243 (95% CI = [-1.816247140, -0.69332424], p-value < 0.05)
+
+sexFemale:age: 0.02362814 (95% CI = [-0.003658098, 0.05082380], p-value = 0.088515)
+
+Effect of sexFemale was significantly positive, indicating that females have better chance of survival. Effects of class and age were significantly negative, which means that the older people and the higher class, the less likely it is to survive. However, there was also significant interaction of sex class. In order to study closely interaction effect of sex and age, a test of contrast has been conducted. The result was that for females age is not significant, but for males it has significantly negative impact. 
+
+The model was assesed with Nagelkerke’s pseudo-$R^2$ and it was 49 and was significantly greater than 0 as indicated by likelihood ratio test comparing the model with a null (intercept-only) model, $\chi^2(1) = 472.97, p < 0.001$
+
+# Extra problems
+
+Below are two extra problems. They are not really much harder, but will require some not completely trivial 
+calculations with logarithms (but nothing too hard, really).
+
+**NOTE.**
+
+The two extra problems below combine some coding and pen-and-paper tasks. Code should be written here
+(or as a separate `.R` file) and derivations may be also written within the notebook or on a separate
+sheet of paper or something like that. The only requirement is to name them properly so I know which
+files are related to the same problem.
+
+## PE1 (3 points)
+
+In this problem we will use `SLID` dataset from `carData` package again. The goal is to conduct a simple $t$ test
+for two independent groups with `wages` being the dependent variable and `sex` the grouping variable.
+The thing is, you are supposed to run the $t$ test for log-transformed wages 
+(since the distribution is right-skewed and bounded from below by zero)
+and then correctly interpret the results in the original scale.
+
+In order to do so, first note the following fact. Arithmetic average over log-transformed values is:
+
+$$
+\bar{x}_{\text{log}} = \frac{1}{n}\sum_{i=1}^n \log{x_i}
+$$
+And to understand the results on the original scale the first step is to understand what $\bar{x}_{\text{log}}$
+is on the original scale. That is, derive:
+
+$$
+\bar{x} = e^{\bar{x}_{\text{log}}}
+$$
+
+**HINT.** The result you will get will be so-called **geometric mean**.
+
+$$
+\bar{x} = e^{\bar{x}_{\text{log}}}
+\\\bar{x} = e^{\frac{1}{n}\sum_{i=1}^n \log{x_i}}
+\\\bar{x} = (e^{\frac{1}{n}})^{log{x_1} + ... + log{x_n}}
+\\\bar{x} = e^{{log{x_1^\frac{1}{n}}}} *...*e^{log{x_n^\frac{1}{n}}}
+\\\bar{x} = (x_1*...*x_n)^{\frac{1}{n}}
+\\\bar{x} = \sqrt[n]{x_1*...*x_n}
+$$
+
+Then, note that the value your $t$ test is concerned with is:
+
+$$
+\bar{d}_{\text{log}} = \frac{1}{n_1}\sum_{i=1}^{n_1} \log{x_i} - \frac{1}{n_2}\sum_{j=1}^{n_2} \log{x_j}
+$$
+
+where $n_1$ is the size of the first group, $n_2$ is the size of the second group and indexes $i$ and $j$ iterate
+over elements of the first and second group respectively.
+
+So in order to understand what the result of a $t$ test with log-transformed dependent variable means in the original
+scale we have to understand what is $\bar{d}$ in the original scale:
+
+$$
+\bar{d} = e^{\bar{d}_{\text{log}}}
+$$
+
+$$
+\bar{x} = e^{\bar{x}_{\text{log}}}
+\\\sqrt[n]{x_1*...*x_n} = e^{\bar{x}_{\text{log}}}
+\\\log{\sqrt[n]{x_1*...*x_n}} = \bar{x}_{\text{log}}
+$$
+
+$$
+\bar{d} = e^{\bar{d}_{\text{log}}}
+\\\bar{d} = \frac{e^{\bar{x_i}_{\text{log}}}}{e^{\bar{x_j}_{\text{log}}}}
+\\\bar{d} = \frac{e^{\log{\sqrt[n_1]{x_1*...*x_i}}}}{e^{\log{\sqrt[n2]{x_1*...*x_j}}}}
+\\\bar{d} = \frac{\sqrt[n_1]{x_1*...*x_i}}{\sqrt[n2]{x_1*...*x_j}}
+$$
+
+With these results in hand you should be able to run a test with `log(wages)` as the dependent variable and interpret
+the results on the original scale. In particular, you should construct a proper confidence interval in the original scale.
+
+```{r PE1}
+data(SLID)
+(SLID <- tibble(SLID))
+SLID <- SLID[complete.cases(SLID),]
+```
+
+
+``` {r}
+hist(SLID$wages)
+hist(log(SLID$wages))
+skewness(log(SLID$wages))
+```
+
+
+``` {r}
+ggplot(SLID, aes(x=sex, y=log(wages), fill=sex)) + 
+    geom_boxplot()
+```
+
+``` {r}
+ggqqplot(log(SLID$wages)[SLID$sex == "Male"])
+ggqqplot(log(SLID$wages)[SLID$sex == "Female"])
+```
+``` {r}
+var.test(log(wages) ~ sex, data = SLID)
+```
+
+Distribution is pretty much normal, variances are equal.
+
+``` {r}
+res <- t.test(log(wages) ~ sex, data = SLID, var.equal = TRUE)
+res
+```
+
+``` {r}
+res$estimate
+```
+
+There is significant difference in wages for males and females.
+
+``` {r}
+geo_male <- exp(mean(log(SLID$wages[SLID$sex == "Male"])))
+geo_fe <- exp(mean(log(SLID$wages[SLID$sex == "Female"])))
+geo_fe/geo_male
+log(geo_fe)-log(geo_male)
+```
+
+Report:
+
+In order to study differences in wages for males and females, a correlational study was conducted. Dependent variable (wages) was right-skewed, so it was log transformed and a two-sample t-test for independent samples was performed on transformed data. F test for equality of variances was conducted with p-value <0.01 indicating that the variances are not equal. T(3985) = -14.238 and p-value < 0.01. Since the wages variable was log transformed, the result of t test (difference between groups) should be interpreted in a different way. The result now is geometric mean of females divided by geometric mean of males. $\hat {d}$ = -0.2214817 with 95% CI = [-0.2519799, -0.1909835]. The results suggest that there is a significant difference between genders when it comes to wages.

@@ -1,0 +1,956 @@
+---
+title: "Exercise II"
+description: ''
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+<style>
+    div.note {
+        font-size: 1em;
+        background-color: #F5F5F5;
+        padding: .5em 1em .5em 1em;
+        border-left: .25em solid black;
+        margin-top: 2em;
+        margin-bottom: 2em;
+    }
+</style>
+
+
+<hr>
+
+```{r setup}
+knitr::opts_chunk$set(
+    fig.width = 6,
+    fig.asp   = 1,
+    fig.align = "center",
+    message   = FALSE,
+    warning   = FALSE
+)
+```
+
+```{r packages_and_settings}
+library(tidyverse)
+library(broom)      # for extracting tidy data frames from statsitical objects
+library(car)        # general functions related to linear models, in particular Anova function
+library(heplots)    # for eta-square calculations, i.e. etasq function
+library(emmeans)    # for pairwise contrasts
+library(gt)         # for making nice tables
+library(effsize)    # for Cohen's d and Glass' delta
+library(sandwich)   # For heteroscedasticity-consistence variance-covariance estimatros
+library(lmtest)     # For regression coefficients tests with custom variance-covariance matrices, i.e. coeftest function
+library(simpleboot) # For easy bootstraping of regression models
+library(rstatix)
+library(ggpubr)
+library(ggplot2)
+library(lmtest)
+library(BioStatR)
+library("GGally")
+library(rcompanion)
+library(ggiraphExtra)
+library(lavaan)
+library(mediation)
+
+## GGplot settings
+theme_set(theme_bw())
+```
+
+# Pen-and-paper problems
+
+## 1.
+
+Let $X_1$, $X_2$ and $X_3$ be three random variables with means $\mu_1$, $\mu_2$ and $\mu_3$, variances
+$\sigma^2_1$, $\sigma^2_2$ and $\sigma^2_3$ and covariances $\sigma_{ij}$ for $i, j = 1, 2, 3$
+(for instance, $\sigma_{12} = \text{Cov}[X_1, X_2]$ and $\sigma_{11} = \sigma^2_1 = \text{Var}[X_1]$).
+
+Consider a random vector $\mathbf{x} = (X_1, X_2, X_3)$. Answer the following questions:
+
+* What is the expected value of $\mathbf{x}$, that is, $\mathbb{E}[\mathbf{x}]$?
+Answer:
+$\mathbf{x}$ is a random vector and the expected value of a random vector is a vector of expected values of its elements.
+
+$$
+\mathbb{E}[x] = (\mathbb{E}[X_1], \mathbb{E}[X_2], \mathbb{E}[X_3]) = (\mu_1, \mu_2, \mu_3)
+$$
+
+* What is variance of $\mathbf{x}$, that is, $\text{Var}[\mathbf{x}]$?
+
+Answer: 
+
+The variance of a vector is a matrix:
+
+$$
+\text{Var}[\mathbf{x}] =
+\begin{pmatrix}
+    \text{Var}[\mathbf{X_1}] & \text{Cov}[\mathbf{X_1, X_2}] & \text{Cov}[\mathbf{X_1, X_3}]\\
+    \text{Cov}[\mathbf{X_2, X_1}] & \text{Var}[\mathbf{X_2}] & \text{Cov}[\mathbf{X_2, X_3}]\\
+    \text{Cov}[\mathbf{X_3, X_1}] & \text{Cov}[\mathbf{X_3, X_2}] & \text{Var}[\mathbf{X_3}]
+\end{pmatrix}
+$$
+$$
+\text{Var}[\mathbf{x}] =
+\begin{pmatrix}
+    \sigma^2_1 & \sigma_{12} & \sigma_{13}\\
+    \sigma_{21} & \sigma^2_2 & \sigma_{23}\\
+    \sigma_{31} & \sigma_{32} & \sigma^2_3
+\end{pmatrix}
+$$
+
+* What is variance of $\mathbf{x}$ assuming that all covariances $\sigma_{ij}$ for $i \neq j$ are zero?
+  What kind of an assumption commonly used in statistical models does such a variance-covariance matrix represents?
+  
+Answer: 
+
+The variance is a following matrix:
+
+$$
+\text{Var}[\mathbf{x}] =
+\begin{pmatrix}
+    \sigma^2_1 & 0 & 0\\
+    0 & \sigma^2_2 & 0\\
+    0 & 0 & \sigma^2_3
+\end{pmatrix}
+$$
+This variance-covariance matrix represents that $\mathbf{x} = (X_1, X_2, X_3)$ consists of elements that are independent
+
+* What is variance of $\mathbf{x}$ assuming that all covariances $\sigma_{ij}$ are zero and all variances
+  $\sigma^2_{i}$ for $i = 1, 2, 3$ are equal to a specific number $\sigma^2$? What kinds of important assumptions
+  (commonly used in linear models) does such a variance-covariance matrix represent? How can you write this matrix
+  in the most concise way possible?
+  
+Answer:
+
+If all variances are equal to $\sigma^2$, then $\text{Var}[\mathbf{x}]$ is equal to:
+
+$$
+\text{Var}[\mathbf{x}] =
+\begin{pmatrix}
+    \sigma^2 & 0 & 0\\
+    0 & \sigma^2 & 0\\
+    0 & 0 & \sigma^2
+\end{pmatrix}
+=
+\sigma^2
+\begin{pmatrix}
+    1 & 0 & 0\\
+    0 & 1 & 0\\
+    0 & 0 & 1
+\end{pmatrix}
+=
+\sigma^2\textbf{I}_{3x3}
+$$
+, where $\textbf{I}_{3x3}$ is a 3x3 identity matrix. The assuption is that this variance-covariance matrix represents that $\mathbf{x} = (X_1, X_2, X_3)$ consists of elements that are independent and identically distributed
+
+## 2. 
+
+Let:
+
+$$
+\mathbf{X} =
+\begin{pmatrix}
+    1 & 2 \\
+    0 & 3 \\
+    1 & 1
+\end{pmatrix}
+\qquad
+\mathbf{y} =
+\begin{pmatrix}
+    1 \\ 2
+\end{pmatrix}
+$$
+Answer the following questions:
+
+ * What is $\mathbf{Xy}$?
+ 
+ Answer:
+ It is a linear transformation of a vector y with X:
+ 
+$$
+ \mathbf{Xy} = 
+  \begin{pmatrix}
+    1*1 + 2*2 \\ 
+    0*1 + 3*2 \\
+    1*1 + 1*2
+\end{pmatrix} = 
+ \begin{pmatrix}
+    5 \\ 
+    6 \\
+    3
+\end{pmatrix}
+$$
+
+ * What are the dimensions (shape) of $\mathbf{X}$?
+ 
+ $\mathbf{X}$ has 3 rows and 2 columns, so it has a shape of 3x2
+ 
+ * $\mathbf{X}$ is a matrix so it is a (linear) function from $\mathbb{R}^p$ to $\mathbb{R}^q$. What are the values of
+   $p$ and $q$?
+   
+Answer:
+$f:\mathbb{R}^p \rightarrow \mathbb{R}^q$
+$\\p=2$
+$\\q=3$
+
+Linear transformation $f$ results in a 3x2 matrix $\mathbf{X}$
+
+ * Consider the transpose $\mathbf{X}^\top$. Write it down. It is still a matrix so it is a (linear) function from
+   $\mathbb{R}^r$ to $\mathbb{R}^s$. What are the values of $r$ and $s$?
+   
+Answer:
+
+$$
+\mathbf{X}^\top = 
+\begin{pmatrix}
+    1 & 0 & 1 \\
+    2 & 3 & 1 
+\end{pmatrix}
+$$
+$f:\mathbb{R}^r \rightarrow \mathbb{R}^s$
+$r=3$
+$s=2$
+ 
+ * Is $\mathbf{X}$ of **full column rank** (no column can be expressed as a linear combination of other columns)? 
+   What if $\mathbf{X}$ was:
+ 
+ $$
+ \mathbf{X} = 
+ \begin{pmatrix}
+    1 & 2 & 2 \\
+    0 & 3 & 0 \\
+    1 & 1 & 2
+\end{pmatrix}
+ $$
+
+Answer:
+To check if $\mathbf{X}$ is of full column rank, we have to check if $\mathbf{X}^\top\mathbf{X}$ is invertible
+
+$$
+\mathbf{X}^\top\mathbf{X} = \begin{pmatrix}
+    2 & 3 \\
+    3 & 14 
+\end{pmatrix}
+$$
+
+This matrix is square, so we can move on further to check if it is invertible. To do so, it must meet the following requirement. 
+Let's call $\mathbf{X}^\top\mathbf{X}$ as $A$
+then:
+$\mathbf{A}^{-1}\mathbf{A} = \mathbf{A}\mathbf{A}^{-1} = \textbf{I}_{nxn}$
+Let's check:
+
+$$
+\mathbf{A}^{-1} = 
+\begin{pmatrix}
+    \frac {14}{19} & \frac {-3}{19} \\
+    \frac {-3}{19} & \frac {2}{19} 
+\end{pmatrix}
+\\\mathbf{A}^{-1}\mathbf{A} = \begin{pmatrix}
+    \frac {14}{19} & \frac {-3}{19} \\
+    \frac {-3}{19} & \frac {2}{19} 
+\end{pmatrix}
+\begin{pmatrix}
+    2 & 3 \\
+    3 & 14 
+\end{pmatrix} =
+\begin{pmatrix}
+    1 & 0 \\
+    0 & 1 
+\end{pmatrix}
+\\\\\mathbf{A}\mathbf{A}^{-1} = 
+\begin{pmatrix}
+    2 & 3 \\
+    3 & 14 
+\end{pmatrix}
+\begin{pmatrix}
+    \frac {14}{19} & \frac {-3}{19} \\
+    \frac {-3}{19} & \frac {2}{19} 
+\end{pmatrix}
+=
+\begin{pmatrix}
+    1 & 0 \\
+    0 & 1 
+\end{pmatrix}
+\\\begin{pmatrix}
+    1 & 0 \\
+    0 & 1 
+\end{pmatrix} = \textbf{I}_{2x2}
+$$
+It holds, so $\mathbf{X}$ is of **full column rank** 
+
+For  
+
+$$
+ \mathbf{X} = 
+ \begin{pmatrix}
+    1 & 2 & 2 \\
+    0 & 3 & 0 \\
+    1 & 1 & 2
+\end{pmatrix}
+ $$
+ 
+ $$
+\mathbf{X}^\top\mathbf{X} = \begin{pmatrix}
+    1 & 0 & 1 \\
+    2 & 3 & 1 \\
+    2 & 0 & 2
+\end{pmatrix}
+\begin{pmatrix}
+    1 & 2 & 2 \\
+    0 & 3 & 0 \\
+    1 & 1 & 2
+\end{pmatrix} = 
+\begin{pmatrix}
+    2 & 3 & 4 \\
+    3 & 14 & 6 \\
+    4 & 6 & 8
+\end{pmatrix} = A
+$$
+$\text det \textbf{A} = 0$, therefore $A$ is not invertible (so $X$ is not of **full column rank** ) 
+
+ 
+## 3.
+ * What is the meaning of $R^2$? What is the difference between $R^2$ and $\eta^2$. When are they equal?
+ 
+Answer: 
+$R^2$ is a determination coefficient and this is a measure that takes value between 0 and 1. It informs to what point differences in one variable can be explained by a difference in another variables overall in the model (percentage of the variable's variation that is explained by the other variable). This value measures the strength of a linearity between two variables (the higher value of $R^2$, the better linearity).
+$\eta^2$ is informing us how much variance of dependent variable is explained by the independent variable, but it is different than $R^2$ in that the $\eta^2$ studies importance of a single model variable.
+For one-way ANOVA, $R^2$ and $\eta^2$ will be equal, because there is only one independent variable.
+
+ * What is the relationship between $\eta^2$ (and total sum of squares in general) and balanced designs?
+ 
+Answer:
+For balanced designs, when all groups are equal, the total sum of squares is spread equally on all factors and $\eta^2$ values for all variables together are equal to $R^2$. For unbalanced groups, however, variation explained by variables can intersect which results in a ridiculous value of $\eta^2$ higher than 1.
+ 
+ * What is partial $\eta^2$ and why it can be a better measure of effect size for highly unbalanced designs?
+
+Answer:
+partial $\eta^2 = \frac {SS_{effect}}{SS_{effect}+SS_{error}}$ 
+, it has values of between 0 and 1 and show the proportion of variance associated with one variables after accounting for variance associated with different factors in the model. It is a better measure for unbalanced designs, because partial $\eta^2$ doesn't equally distribute sum of square on factors but calculates variance explained solely by a given factor that remains after crossing out variance explained by other variables, and thus takes into account that the sizes may not be equal. It gives more meaningful results that $\eta^2$
+o
+
+
+## 4.
+
+Let $\mathbf{x} = (\text{blue, blue, green, green, brown, brown})$ be a vector of categorical measurements of eye colors
+of six persons.
+
+ * Write down the design matrix $\mathbf{X}$ representing a one-way ANOVA design using treatment (dummy) coding
+   (including the intercept column).
+
+Answer:
+
+$$
+\mathbf{X} = \begin{pmatrix}
+    1 & 0 & 0 \\
+    1 & 1 & 0 \\
+    1 & 0 & 1
+\end{pmatrix}
+$$
+ * How many regression coefficients are in this model including $b_0$ (the intercept)?
+ 
+ Answer:
+ There are 3 regression coefficients:
+ 
+$$
+\beta = \begin{pmatrix}
+    \beta_0 \\
+    \beta_1  \\
+    \beta_2
+\end{pmatrix}
+$$
+ 
+ * What are the interpretations of the regression coefficients?
+ 
+Answer:
+
+$\beta_0$, intercept coefficient, denotes mean in the first group (blue). $\beta_1$ and $\beta_2$ are slope coefficients that can be interpreted as: 
+
+$\beta_1$ difference between mean in the first group (blue) and mean in the second group (green).
+
+$\beta_2$ is the difference between mean in the first group (blue) and mean in the third group (brown).
+
+ * Write down equations for sample means in groups in terms of regression coefficients.
+ 
+ $$
+\mu_1 = \beta_0
+\\\mu_2 = \beta_0 + \beta_1
+\\\mu_3 = \beta_0 + \beta_2
+ $$
+
+
+## 5.
+
+In this exercise we will derive a coding scheme for one-way ANOVA with $3$ groups known as _effect coding_ or 
+_sum to zero contrasts_. An effect coding scheme should meet the following requirements:
+
+ 1. Intercept is equal to the arithmetic average of group means.
+ 2. The first regression coefficient $b_1$ should be equal to the difference between the mean in the first group
+    and the arithmetic average of all group means.
+ 3. The second regression coefficient $b_2$ should be equal to the difference between the mean in the second group
+    and the arithmetic average of all group means.
+
+Start by creating a hypothesis matrix representing the above contraints in rows 
+(one row should be a contrasts vector for one contraint) and then convert it (by inverting) to a contrast matrix
+(a design matrix that represents a one-way ANOVA with given coding scheme). A correct contrasts matrix should
+have only $1$'s in the first column (the intercept column).
+
+Effect coding makes most sense for balanced designs (or when group sizes are not meaningful). Why?
+
+Answer:
+
+Row 1: $\mu_{all} = \frac{(\mu_1+\mu_2+\mu_3)}{3} = \color {red} {\frac {1} {3}} \mu_1 + \color {red} {\frac {1} {3}} \mu_2 + \color {red} {\frac {1} {3}} \mu_3$
+
+Row 2: $\mu_1 - \mu_{all} = \mu_1 - \frac {1} {3} \mu_1 - \frac {1} {3} \mu_2 - \frac {1} {3} \mu_3 = \color {red} {\frac {2} {3}} \mu_1 \color {red} {- \frac {1} {3}} \mu_2 \color {red} {- \frac {1} {3}} \mu_3$
+
+Row 3: $\mu_2 - \mu_{all} = \mu_2 - \frac {1} {3} \mu_1 - \frac {1} {3} \mu_2 - \frac {1} {3} \mu_3 = \color {red} {- \frac {1} {3}} \mu_1 + \color {red} {\frac {2} {3}} \mu_2 \color {red} {- \frac {1} {3}} \mu_3$
+
+Hypothesis matrix $\textbf {W}$:
+
+$$
+\textbf {W} = \begin{pmatrix}
+    \frac {1}{3} & \frac {1}{3} & \frac {1}{3} \\
+    \frac {2}{3} & -\frac {1}{3} & -\frac {1}{3} \\
+    -\frac {1}{3} & \frac {2}{3} & -\frac {1}{3}
+\end{pmatrix}
+$$
+
+Contrast matrix can be created by inverting hypothesis matrix $\textbf {W}$
+
+$$
+\textbf {W}^{-1} = \begin{pmatrix}
+    1 & 1 & 0 \\
+    1 & 0 & 1 \\
+    1 & -1 & -1
+\end{pmatrix}
+$$
+
+Effect coding makes most sense for balanced designs (or when group sizes are not meaningful). Why?
+
+Answer:
+Balanced design means that the sizes of all groups are equal. Why group sizes matter in effect coding? Because measures that use group sizes may then give false results. For example, in calculating the mean of all observations, the grand mean for unequal groups will be different than the mean of all means. In the $\textbf {W}$ matrix above arithmetic average and grand mean are equal for balanced design, but if group sizes weren't equal and we wanted to calculate grand mean, it wouldn't be the right way. 
+
+
+# Coding problems
+
+## 1.
+
+In this problem you will work with `Guyer` dataset (from `carData` package) which we already know from the notebook 9
+(`9-linear-model-3`). We will use it to examine an important issue related to different kinds of test for linear
+models and some complications with standard summaries generated by `R`.
+
+```{r P1}
+data("Guyer")
+Guyer <- tibble(Guyer)
+Guyer
+```
+
+* First, generate a basic summary for the two-way ANOVA model with interaction `coopeation ~ sex * condition`.
+  What does this summary suggests, in particular with respect to significance of effects?
+  
+ANSWER:
+First, we fit the model allowing interactions and generate a summary.
+
+``` {r}
+model <- lm(cooperation ~ sex * condition, data = Guyer)
+summary(model)
+```
+
+From the summary we can see that there is definitely no significant main effect of sex and interaction. Main effect of condition is questionable, but rather not significant. This is what I see looking at summary, but to draw proper conclusion we need further tests.
+
+``` {r}
+ggqqplot(residuals(model))
+```
+
+* Now, generate summaries for ANOVAs with type II and type III sums of squares using either `Anova` function
+  (from `car` package) or `etasq` function (from `heplots`) package. Do you see any important differences?
+
+Answer:
+
+Anova type II:
+
+``` {r}
+etasq(model, anova = TRUE, partial = FALSE)
+```
+
+Anova type III:
+
+``` {r}
+etasq(model, anova = TRUE, partial = FALSE, type = 3)
+```
+
+  Which one seems to agree more with the summary generated by `summary` function?
+  
+Type III and summary agree more, as the results are very similar. For Type II we can see a significant effect of condition (for $\alpha = 0.05$), which is not the case for neither Type III, nor summary.
+
+* Now, recall that type II ANOVA gives **maximally powerfull** test for main effects if there is no significant
+  interaction (see `9-linear-model-3` notebook if you do not remember what it is about). Does this information
+  help you to understand your results and decide which one of them is correct (type II or type III sums of squares)?
+  
+ANSWER: Yes. In our model we don't seem to have a significant interaction effect (p = 0.68767), so we can trust Type II Anova to give us maximally powerful main effects test. Therefore, I think Type II gave us correct results.
+
+* Estimate magnitude of the main effect of `condition` by comparing estimated marginal means in `condition = public`
+  and `condition = anonymous` groups (averaged over levels of `sex`) and test if the difference between them is 
+  significant. You can do this easily with functions from `emmeans` package (see examples from `9-linear-model-3`).
+  Does the result of this test agree with the result of the type II or type III ANOVA?
+  
+ANSWER:
+
+``` {r}
+tapply(Guyer$cooperation, Guyer$condition, mean)
+```
+
+The means look quite different, but let's conduct a proper test 
+
+``` {r}
+pairs(emmeans(model, "condition")) %>%
+  confint()
+```
+
+Difference between anonymous and public means is significant - 95% confidence interval = (-27.2, -2.37). This conclusion agrees only with Type II Anova summary, as there main effect of condition was also significant.
+ 
+
+## 2.
+
+Use `Moore` dataset from `carData` package (type in `?Moore` in the console for details). 
+
+```{r P2}
+data("Moore")
+Moore <- tibble(Moore)
+Moore
+```
+ 
+ * First do one-way ANOVA for `conformity ~ partner.status`.
+ANSWER:
+ 
+``` {r}
+levels(Moore$partner.status)
+one_mod <- lm(conformity ~ partner.status, data = Moore)
+summary(one_mod)
+```
+P-value < 0.05 indicates that the difference between observations with low and high partner status is significant (but weak). $R^2$ suggests that the partner status accounts for about 1.7% of variance of the conformity
+
+
+ * Then do ANCOVA with one categorical factor and one continuous covariate: `conformity ~ partner.status + fscore`.
+   Does including the authoritarianism score change anything?
+
+``` {r}
+one_mod_anc <- update(one_mod, ~ . + fscore)
+anova(one_mod, one_mod_anc)
+etasq(one_mod_anc, anova = TRUE, partial = TRUE)
+```
+
+Adding fscore didn't change much, probably because, judging by the high p-value and low partial $\eta^2$, it doesn't really influence the result. Effect of the partner status is still significant, but rather weak.
+
+``` {r}
+ggqqplot(residuals(one_mod))
+ggqqplot(residuals(one_mod_anc))
+```
+
+Now I want to estimate 95% confidence interval for the difference between partner status.
+
+``` {r}
+emmeans(one_mod_anc, "partner.status") %>%
+    pairs %>%
+    confint
+```
+
+ * Report your results properly.
+
+REPORT:
+
+To check conformity level in the relation with the status of your partner, an experimental study was conducted on subjects who were paired with a partner of either low or high status. The dependent variable was conformity and independent variable was partner status. The subject's authoritarianism was also measured with a F-scale score. 
+One-way ANOVA has been conducted to study differences between the group with low and high status partner. It has yielded significant results indicating that the amount of conforming responses was different depending on the partner status. Fscore did not have any effect on the conformity level (p-value = 0.871940).
+Difference between estimated marginal means of high and low status was $4.27$ with $95$% confidence interval = $(1.33, 7.21)$ indicating that it is significant.
+
+ * Read the description of the dataset. What kind of study is it? Can you interpret your results in causal terms?
+ 
+ANSWER: This is an experimental study, as dependent variable - partner status - was manipulated. Therefore, we can conclude causal mechanisms (although, as always, carefully, as there is a possibility that other variables we don't know about influence the result).
+
+
+## 3.
+
+Use `Adler` dataset from `carData` package. It is data from an experiment. Read its description 
+(it is not super clear but what is important for us is to understand more or less what it is about and what is dependent 
+variable and what are experimental factors).
+
+```{r P3}
+data("Adler")
+Adler <- tibble(Adler)
+Adler
+```
+
+ * Do full analysis for all factors included in the experiment (allowing for possible interaction effects).
+ 
+I have to check assumptions for Two-way Anova
+ 
+``` {r}
+Adler %>%
+  group_by(instruction, expectation) %>%
+  get_summary_stats(rating, type = "mean_sd")
+```
+
+Group sizes are equal
+
+``` {r}
+Adler %>%
+  group_by(instruction, expectation) %>%
+  identify_outliers(rating)
+```
+
+There are four outliers, all in the 'good' group, so if I removed them, I wouldn't have equal samples
+
+Normality
+
+``` {r}
+ggqqplot(Adler, "rating", ggtheme = theme_bw()) +
+  facet_grid(instruction ~ expectation)
+```
+
+There are no major disruptions and we can assess that the model is more or less normal.
+
+Normality of model residuals:
+
+``` {r}
+res  <- lm(rating ~ expectation*instruction, data = Adler)
+
+ggqqplot(residuals(res))
+```
+
+We can assume normality
+
+Homogeneity of variance with Levine's test:
+
+``` {r}
+Adler %>% levene_test(rating ~ expectation*instruction)
+```
+p > 0.05 indicates that the variances are homogenous
+
+Linearity
+
+``` {r}
+raintest(res)
+```
+The model is linear.
+
+Now we can safely conduct a Two-way Anova
+
+``` {r}
+aov2 <- lm(rating ~ expectation*instruction, data = Adler)
+summary(aov2)
+```
+
+We can observe significant interaction effects.
+
+``` {r}
+aov2 %>%
+    emmeans(c("expectation", "instruction")) %>%
+    tidy(conf.int = TRUE) %>%
+    ggplot(aes(x = expectation, y = estimate, group = instruction, color = instruction)) +
+    geom_line() +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = .1, linetype = 2) +
+    geom_point(shape = 21, size = 3, fill = "white") +
+    labs(x = "", y = "Estimated marginal means")
+```
+
+We can see that there are interaction effects between instruction (for good) and expectation. Therefore, we cannot study main effects and we have to focus of simple effects and interaction.
+
+ * Explain the interpretation of regression coefficients in you final model
+   (remember that by default `R` uses treatment coding).
+
+Since we used treatment coding, interpretation is rather simple. Here are the coefficients:
+$b_0 = 4.444, b_1 = -22.722, b_2 = -14.278, b_3 = -11.389, b_4 = 29.056, b_5 = 30.5$, where $b_0$ is the mean for expectation = high and instruction = good (reference group),
+$b_1$ is the difference between mean in reference group and (low, good),
+$b_2$ is the difference between mean in reference group and (high, none),
+$b_3$ is the difference between mean in reference group and (high, scientific),
+$b_4$ is the difference between mean in reference group and (low, none),
+$b_5$ is the difference between mean in reference group and (low, scientific).
+
+Using the coefficients we can calculate expected value (mean) of each condition:
+
+$$
+\mathbb{E}[Y|high, good] = b_0 = 4.444
+\\\mathbb{E}[Y|low, good] = b_0 + b_1 = 4.444 - 22.722 = -18.278
+\\\mathbb{E}[Y|high, none] = b_0 + b_2 = 4.444 - 14.278 = -9.834
+\\\mathbb{E}[Y|high, scientific] = b_0 + b_3 = 4.444 - 11.389 = -6.945
+\\\mathbb{E}[Y|low, none] = b_0 + b_1 + b_2 + b_4 = 4.444 - 22.722 - 14.278 + 29.056 = -3.5
+\\\mathbb{E}[Y|low, scientific] = b_0 + b_1 + b_3 + b_5 = 4.444 - 22.722 - 11.389 + 30.5 = 0.833
+$$
+ * Do _post hoc_ analysis and report your results properly (remember about at least some basic effect size measures).
+
+In the model we have significant interactions, so we should perform post-hoc tests to truly understand our model, but ignore main effect and focus on interactions.
+
+``` {r}
+etasq(aov2, anova = TRUE, partial = TRUE)
+```
+
+Expectation instruction is in fact, significant. We cannot conclude anything about main effect with interaction effect present.
+
+Two one-way ANOVAs for expectation and instruction
+
+``` {r}
+simple <- emmeans(aov2, ~expectation|instruction)
+test(pairs(simple), joint = TRUE)
+```
+
+``` {r}
+simple2 <- emmeans(aov2, ~instruction|expectation)
+test(pairs(simple2), joint = TRUE)
+```
+
+We can see significant results, but I can conduct more detailed tests:
+
+Estimating simple effects:
+
+``` {r}
+noise.emm <- emmeans(aov2, ~ instruction * expectation)
+contrast(noise.emm, "consec", simple = "each", combine = TRUE, adjust = "mvt")
+```
+
+``` {r}
+contrast(noise.emm, "pairwise", by="expectation")
+contrast(noise.emm, "pairwise", by="instruction")
+```
+
+Report:
+
+In order to study differences in rating of success under conditions of low or high expectancy with receiving good, scientific or no instruction, a two-way ANOVA has been conducted. The first condition was expectation (either low or high) and the second experimental condition was of scientific, good or none instruction. An interaction term was also included in the analysis. The dependent variable was the rating provided by the subject.
+
+Analysis of variance showed that the interaction effect was significant and was associated with about 26% of the variance of the dependent variable (calculated with partial $\eta^2$). A post-hoc test for simple effects revealed following significant results (p-value adjusted with tukey method for 3 estimates): 
+
+simple effect of instruction for expectation = low or expectation = high:
+
+- expectation = high: instruction (good - none) (p-value = 0.0017),
+
+- expectation = high: instruction (good - scientific) (p-value = 0.0154),
+
+- expectation = low: instruction (good - none) (p-value = 0.0011),
+
+- expectation = low: instruction (good - scientific) (p-value <.0001),
+
+and simple effect of expectation when instruction = good:
+
+- instruction = good: expectation (high - low) (p-value <.0001).
+
+## 4.
+
+Use `GSSvocab` dataset from `carData` package. Read its description and determine what kind of study it is
+(i.e. is it an experiment or a correlational study). Use a linear model to study correlates/determinants of
+linguistic skills (`vocab` variable).
+
+ * Use only data for year 2016.
+ * Remember about avoiding unnecessary discretization of continuous predictors.
+ * Apart from that use as many variables as possible (in a rather exploratory fashion).
+ * Interpret and report your results.
+
+**NOTE.** This problem can be solved in particarily many equally good ways. Do not worry about this.
+          Anything that is clear and sound will be accepted.
+
+```{r P4}
+data("GSSvocab")
+GSSvocab <- tibble(GSSvocab)
+GSSvocab <- GSSvocab %>% filter(year == 2016)
+GSSvocab
+```
+``` {r}
+GSSvocab <- GSSvocab[complete.cases(GSSvocab),]
+```
+
+``` {r}
+GSSvocab %>%
+    ggplot(aes(x = vocab, fill = gender)) +
+    geom_bar(stat = "count", position = "dodge")
+
+GSSvocab %>%
+    ggplot(aes(x = vocab, fill = nativeBorn)) +
+    geom_bar(stat = "count", position = "dodge")
+
+hist(GSSvocab$age)
+
+hist(GSSvocab$educ)
+
+hist(GSSvocab$vocab)
+```
+
+``` {r}
+GSSvocab[, c(2,3,6,7,8)]
+```
+``` {r}
+ggcorr(GSSvocab[, c(2,3,6,7,8)], label = TRUE)
+```
+
+This is the first model I create to see more or less which factors are important and if there is any interaction
+
+``` {r}
+test <- lm(vocab ~ nativeBorn * (age + educ + gender), data = GSSvocab)
+summary(test)
+```
+
+There are no interactions, we can try another model
+
+``` {r}
+lang <- lm(vocab ~ nativeBorn + age + educ + gender, data = GSSvocab)
+summary(lang)
+```
+
+We can remove gender, but just to be sure I will try different models and see which one is the best
+
+``` {r}
+model1 = lm(vocab ~ educ,
+           data = GSSvocab)
+
+model2 = lm(vocab ~ educ + age,
+           data = GSSvocab)
+
+model3 = lm(vocab ~ educ + age + nativeBorn,
+           data = GSSvocab)
+
+model4 = lm(vocab ~ age + nativeBorn,
+           data = GSSvocab)
+
+model5 = lm(vocab ~ nativeBorn,
+           data = GSSvocab)
+
+model6 = lm(vocab ~ age,
+           data = GSSvocab)
+
+model7 = lm(vocab ~ educ + nativeBorn,
+           data = GSSvocab)
+
+
+compareLM(model1, model2, model3, model4, model5, model6, model7)
+```
+
+Based on $R^2$, model 3 is the best
+
+``` {r}
+lang2 <- lm(vocab ~ nativeBorn + educ + age, data = GSSvocab)
+summary(lang2)
+```
+
+``` {r}
+etasq(lang2, anova = TRUE, type = 2)
+```
+
+Effects of all included variables are significant
+
+Now we can check assumptions for linear model.
+
+Normality of residuals: 
+
+``` {r}
+ggqqplot(residuals(lang2))
+```
+
+This is acceptable
+
+Homogeneity of residuals:
+
+``` {r}
+plot(lang2, 3)
+```
+
+It is not perfect, but stable. We can move on
+
+``` {r}
+plotNormalHistogram(residuals(lang2))
+```
+
+``` {r}
+tibble(
+    x = fitted(lang2),
+    y = resid(lang2)
+) %>%
+    ggplot(aes(x = x, y = y)) +
+    geom_point() +
+    geom_smooth(method = "gam")
+```
+
+Model can be assumed linear
+
+Next I will study model accuracy
+
+``` {r}
+print(paste0("Adjusted R^2: ", summary(lang2)$adj.r.squared))
+print(paste0("RSE: ", sigma(lang2)))
+print(paste0("Error rate: ", sigma(lang2)/mean(GSSvocab$vocab)))
+
+```
+
+We have 3 predictors, so I look at adjusted $R^2$. About 21% of the variance is explained by the predictors. $RSE = 1.697$ and we can calculate error rate which is 28%. This is not a very good model
+
+``` {r}
+ggPredict(lm(vocab ~ age + educ + nativeBorn, data = GSSvocab))
+```
+``` {r}
+summary(lang2)
+```
+
+Report:
+
+In order to study differences in vocabulary test for subjects born in the USA and foreigners a correlation research was conducted. Variables that were also controlled were age, gender and years of education. An interaction term was also included in the analysis. The dependent variable was the score in vocabulary test.
+
+In order to test the nature of the variables, linear model was designed to study correlates of linguistic skills. Two-way ANOVA revealed no significant interactions and significant effect of nativeBorn, age and educ (p-value < 0.05) and about 21% of the variance is explained by the predictors. Using coefficients established via ANCOVA, multiple regression equation is the following:
+$y = 0.883424 + 0.685772*x_1 + 0.29356*x_2 + 0.010301*x_3$ 
+
+($x_1$ - nativeBorn, $x_2$ - educ, $x_3$ - age)
+
+## 5.
+
+Use data from exercise 4 (`GSSvocab`). Consider `vocab` as the dependent variable and two predictors: `age` and `educ`.
+Estimate total effect of `age` on `vocab`, direct effect of `age` on vocab and indirect effect of `age` on vocab
+mediated by (transferred through) `educ`.
+
+You do not have to run tests or calculate confidence intervals. Just estimate appropriate regression coefficients.
+However, if you want you may try to calculate confidence intervals for different effects 
+(it is easy to do this for total and direct effect but indirect effect may require bootstraping).
+
+**HINT.** If you are not sure what this proble is about go back to chapter 11 in the textbook and section 11.6
+          in particular.
+          
+ANSWER:
+
+mediator - educ
+
+predictor - age
+
+dependent variable - vocab
+
+Total effect of `age` on `vocab`:
+
+``` {r}
+totaleffect = lm(vocab~age,GSSvocab)
+summary(totaleffect)
+```
+
+Total effect = 0.009392 and it is significant (p-value < 0.5)
+
+Direct effect of `age` on vocab:
+
+``` {r}
+direct = lm(vocab~age + educ, GSSvocab)
+summary(direct)
+```
+
+The effect of the age onto educ:
+
+``` {r}
+mediator = lm(educ~age,GSSvocab)
+summary(mediator)
+```
+
+There is no significant effect of educ on age, so we don't have any evidence to conclude mediation
+
+Direct effect of `age` on vocab = 0.010861. 
+
+``` {r}
+results <- mediate(mediator, direct, treat='age', mediator='educ', boot=T)
+summary(results)
+```
+
+From ACME we can conclude indirect effect of `age` on vocab mediated by `educ`: -0.00147
+ADE is direct effect of the age on vocab and it is 0.01086 and total effect is 0.00939, like we already calculated.
+
+REPORT:
+
+Indirect, direct and total effects for GSSvocab (vocab = dependent variable, age = predictor, educ = mediator) was calculated and confidence interval was established using bootstrapping. Following results were found. 
+Indirect effect of age on vocab mediated by educ is not significant (p-value = 0.18) and is equal to -0.00147 with 95% CI = (-0.00359, 0), which means there is not enough evidence to conclude mediation. Direct effect of age on vocab is significant (p-value < 0.05) and is equal to 0.01086 with 95% CI = (0.00660, 0.02). Total effect of age on vocab is significant (p < 0.05) and equal to 0.00939 with 95% CI = (0.00480, 0.01).
+
