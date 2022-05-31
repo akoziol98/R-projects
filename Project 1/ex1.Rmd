@@ -1,0 +1,758 @@
+## Pen-and-paper problems (A)
+
+### A1
+
+Show that:
+$$
+\sum_{i=1}^n (x_i - \bar{x}) = 0
+$$
+where $\bar{x}$ is a sample mean (arithmetic average). Show that the same holds for $\mathbb{E}[X$ and $\mathbb{E}[X]]$, that is:
+$$
+\mathbb{E}[X - \mathbb{E}[X]] = 0
+$$
+SOLUTION
+
+To show that $\sum_{i=1}^n (x_i - \bar{x}) = 0$ is true, I will conduct a proof by contradiction.
+First, we assume that $\sum_{i=1}^n (x_i - \bar{x}) \neq 0$ is true and transform left side of the equation. 
+$$
+\\\sum_{i=1}^n (x_i - \bar{x}) \neq 0
+\\\sum_{i=1}^n (x_i - \bar{x}) \neq 0
+\\(x_1 - \bar{x}) + (x_2 - \bar{x}) + ... + (x_n - \bar{x}) \neq 0
+\\x_1 + x_2 + ... + x_n - \bar{x} - \bar{x} - ... - \bar{x} \neq 0
+\\x_1 + x_2 + ... + x_n - n*\bar{x} \neq 0
+\\\sum_{i=1}^n x_i \neq n*\bar{x} \quad \text{ / : n, (because n > 0)}
+\\ \frac {\sum_{i=1}^n x_i} {n} \neq \bar{x} \quad \text {(from definition of the mean)} 
+\\ \bar{x} \neq \bar{x}
+\\\text{contradiction}
+$$
+
+Assuming that  $\sum_{i=1}^n (x_i - \bar{x}) \neq 0$ leads to a contradiction, then this assumption is false. Therefore, it is true that $\sum_{i=1}^n (x_i - \bar{x}) = 0$
+
+Next, I will show that $\mathbb{E}[X - \mathbb{E}[X]] = 0$ is true. I will also conduct a proof by contradiction. First, let's assume that $\mathbb{E}[X - \mathbb{E}[X]] = 0$ is false. Then, $\mathbb{E}[X - \mathbb{E}[X]] \neq 0$ is true.
+Left side of the equation can be transformed in this way:
+$$
+\\\mathbb{E}[X - \mathbb{E}[X]] \neq 0
+\\\mathbb{E}[X] - \mathbb{E}[\mathbb{E}[X]] \neq 0 \quad \text {from basic properties of } \mathbb{E}[X]: \mathbb{E}[\mathbb{E}[X]] = \mathbb{E}[X]
+\\\mathbb{E}[X] - \mathbb{E}[X] \neq 0
+\\ 0 \neq 0
+\\\text {contradiction}
+$$
+The assumption leads to a contradiction, so it is false. Therefore, it is true that $\mathbb{E}[X - \mathbb{E}[X]] = 0$
+
+### A2
+
+Show that:
+$$
+\text{Var}[aX + bY] = a^2\text{Var}[X] + b^2\text{Var}[Y] + 2ab\text{Cov}[X, Y]
+$$
+where $a$ and $b$ are two constants.
+
+**Hint.** Start with the definition of variance:
+$$
+\text{Var}[X] = \mathbb{E}[(X - \mathbb{E}[X])^2] = \mathbb{E}[X^2] - \mathbb{E}[X]^2
+$$
+
+**Hint II.** Remember about the definition of covariance that:
+$$
+\text{Cov}[X, Y] = \mathbb{E}[(X - \mathbb{E}[X])(Y - \mathbb{E}[Y])] = \mathbb{E}[XY] - \mathbb{E}[X]\mathbb{E}[Y]
+$$
+
+SOLUTION
+
+To show that the equation is true, I will transform the left side to obtain the right side. Each line(step) results from the previous one.
+$$
+\\\text{Var}[aX + bY] \quad \text{from above's defition of variance}
+\\\color{red}{\mathbb{E}[(aX + bY)^2]} - \color{green}{\mathbb{E}[aX + bY]^2}
+\\\color{red}{\mathbb{E}[a^2X^2 + 2abXY + b^2Y^2]} - \color{green}{\mathbb{E}[aX + bY]*\mathbb{E}[aX + bY]}
+\\\color{red}{\mathbb{E}[a^2X^2] + \mathbb{E}[2abXY] + \mathbb{E}[b^2Y^2]} -\color{green}{ [(\mathbb{E}[aX]+\mathbb{E}[bY])*(\mathbb{E}[aX]+\mathbb{E}[bY])]}
+\\\color{red}{a^2\mathbb{E}[X^2] + 2ab\mathbb{E}[XY] + b^2\mathbb{E}[Y^2]} - \color{green}{(\mathbb{E}[aX]^2+2\mathbb{E}[aX]\mathbb{E}[bY] + \mathbb{E}[bY]^2)}
+\\\color{red}{a^2\mathbb{E}[X^2] + 2ab\mathbb{E}[XY] + b^2\mathbb{E}[Y^2]} - \color{green}{\mathbb{E}[aX]^2 - 2ab\mathbb{E}[X]\mathbb{E}[Y] - \mathbb{E}[bY]^2}
+\\\color{red}{2ab\mathbb{E}[XY]}- \color{green}{2ab\mathbb{E}[X]\mathbb{E}[Y]} + \color{red}{a^2\mathbb{E}[X^2] + b^2\mathbb{E}[Y^2]} - \color{green}{\mathbb{E}[aX]^2 - \mathbb{E}[bY]^2} 
+\\\color{magenta}{2ab(\mathbb{E}[XY]- \mathbb{E}[X]\mathbb{E}[Y])} + \color{orange}{a^2\mathbb{E}[X^2] + b^2\mathbb{E}[Y^2] - \mathbb{E}[aX]*\mathbb{E}[aX] - \mathbb{E}[bY]*\mathbb{E}[bY]}
+\\\text{from defition of covariance}
+\\\color{magenta}{2ab\text{Cov}[X, Y]} + \color{orange}{a^2\mathbb{E}[X^2] + b^2\mathbb{E}[Y^2] - a^2\mathbb{E}[X]^2 - b^2\mathbb{E}[Y]^2}
+\\\color{magenta}{2ab\text{Cov}[X, Y]} + \color{orange}{a^2(\mathbb{E}[X^2] - \mathbb{E}[X]^2)+ b^2(\mathbb{E}[Y^2] - \mathbb{E}[Y]^2)}
+\\\text {from definition of variance}
+\\\color{magenta}{2ab\text{Cov}[X, Y]} + \color{orange}{a^2\text{Var}[X] + b^2\text{Var}[Y]}
+\\a^2\text{Var}[X] + b^2\text{Var}[Y] + 2ab\text{Cov}[X, Y]
+$$
+$\\\text{Var}[aX + bY]$ can be transformed into  $a^2\text{Var}[X] + b^2\text{Var}[Y] + 2ab\text{Cov}[X, Y]$, so it is true that: $\text{Var}[aX + bY] = a^2\text{Var}[X] + b^2\text{Var}[Y] + 2ab\text{Cov}[X, Y]$
+
+
+### A3
+
+Let $X$ be a random normal variable with mean $\mu_X$ and variance $\sigma^2_X$ and $Y$ be another random normal variable with mean $\mu_Y$ and variance $\sigma^2_Y$. Furthermore, there is no covariance between them, $\text{Cov}[X, Y] = 0$. Are $X$ and $Y$ independent? What if at least one of them was not normal? Justify your answer.
+
+SOLUTION
+
+When X and Y are random normal variables and $\text{Cov}[X, Y] = 0$, then they are independent. This is a unique attribute of normal variables, that from covariance equal to $0$ we can conclude independence.
+However, when at least one of the variables is not normal, then this inference does not hold. In non-normal distribution in at least one of the variables, there may be a nonlinear relationship that covariance does not catch.
+
+
+### A4
+
+Let $A$ and $B$ be two events and $P(A \cap B) = P(A)P(B)$. Does it imply that:
+$$
+P(A^C \cap B^C) = P(A^C)P(B^C)
+$$
+where $A^C$ and $B^C$ are complements of events $A$ and $B$. Justify your answer (mathematically).
+
+SOLUTION
+
+I will refer to $P(A \cap B) = P(A)P(B)$ as L and to $P(A \cup B) = P(A) + P(B) - P(A \cap B)$ as S, which is a definition of the union of sets
+To show that L implies $P(A^C \cap B^C) = P(A^C)P(B^C)$, I will start with $P(A^C)P(B^C)$ and transform it into $P(A^C \cap B^C)$. Each step (line) results from the previous one.
+$$
+\\\color{green}{P(A^C)}\color{magenta}{P(B^C)}
+\\\color{green}{(1-P(A))}*\color{magenta}{(1-P(B))}
+\\1-P(A)-P(B)+\color{blue}{P(A)*P(B)}
+\\\text {from }\color{blue}L
+\\1-P(A) - P(B)+\color{blue}{P(A \cap B)}
+\\1-(\color{red}{P(A)+P(B) - P(A \cap B)})
+\\\text {from } \color{red}S
+\\1-\color{red}{P(A \cup B)}
+\\P(A \cup B)^c
+\\\text {from de Morgan's law for the complement of union: } P(A \cup B)^c = P(A^c \cap B^c)
+\\P(A^c \cap B^c)
+$$
+I showed that $P(A^C)P(B^C)$ can be transformed into $P(A^c \cap B^c)$ assuming that $P(A \cap B) = P(A)P(B)$ is true. Therefore, $P(A \cap B) = P(A)P(B)$ implies $P(A^C \cap B^C) = P(A^C)P(B^C)$
+
+
+### A5
+
+Let $\bar{x}_1 = 80$ be a sample mean in a group of $n_1 = 50$ observations ($s_1^2 = 36$) and $\bar{x}_2 = 85$ be a sample mean in a group of $n_2 = 60$ observations ($s^2_2 = 49$). Use an appropriate two-sample $z$ test to test whether true means in the two groups are different. Start by defining proper null and alternative hypotheses. Provide $p$-value and an appropriate confidence interval. Use significance level $\alpha = 0.01$.
+
+SOLUTION
+
+$$
+H_0: \mu_1 - \mu_2 = 0
+\\H_1: \mu_1 - \mu_2 \neq 0
+$$
+To test the hypothesis I will conduct a two-sided z-test. Firstly I will calculate z-score:
+$$
+\\z=\frac{\bar{x_1} - \bar{x_2} - \Delta} {\sqrt{\frac {s_1^2} {n_1} + \frac {s_2^2} {n_2}}} \sim N (0,1)
+\text { from Slutsky and continuous mapping theorem}
+\\z=\frac{80 - 85 - 0} {\sqrt{\frac {36} {50} + \frac {49} {60}}}
+\\z=\frac{-5} {\sqrt{\frac {461} {300}}}
+\\z\approx\frac{-5} {1.24}
+\\z\approx-4.033
+$$
+Constructing rejection region for $\alpha = 0.01$, $q_z^{0.99} \approx 2.57$, then rejection region is $R=[-\infty, -2.57] \cup [2.57, \infty]$
+Z-score $(-4.033)$ falls into $[-\infty, -2.57] \cup [2.57, \infty]$ region, but to make proper judgments I will calculate p-value.
+From z-table:
+
+$$
+\\p-value = 2*P(Z \leq -4.033)
+\\p-value \approx 0.00006
+\\p-value < \alpha \text {, so we can reject }H_0
+$$
+
+Constructing confidence interval:
+
+$$
+\\ 1-\alpha = [\bar{x_1} - \bar{x_2} - q_z^{0.99}*\sqrt{\frac {s_1^2} {n_1} + \frac {s_2^2} {n_2}}, \bar{x_1} - \bar{x_2} + q_z^{0.99}*\sqrt{\frac {s_1^2} {n_1} + \frac {s_2^2} {n_2}}]
+\\0.99 = [-8.1868, -1.8132]
+$$
+
+The confidence interval doesn't contain $\mu_1 - \mu_2 (=0)$, so we can reject $H_0$, which is consistent with previous findings.
+The confidence interval states that if we conducted the study more times, then assuming $H_0$ is true, then the true parameter would fall into $[-8.1868,-1.8132]$ interval $99$% of times.
+
+Final report:
+The mean in the first sample was $80$ $(s = 6, n = 50)$ and in the second sample $85$ $(s = 7, n = 49)$. A two-sided z-test showed that the difference is statistically significant, as $H_0$ can be rejected. $z-score = -4.033$, $p-value = 0.00006$. $99$% two-sided confidence interval is $[-8.1868,-1.8132]$
+
+
+## Coding problems
+
+
+Here I import all libraries that I use for the tasks. It should be executed for each task to work
+
+```{r packages_that_may_be_useful_in_the_homework}
+library(tidyverse)
+library(boot)
+library("ggpubr")
+library(tidyr)
+library(ggplot2)
+library("graphics")
+library(latex2exp)
+```
+
+<hr>
+
+### B1
+
+In this problem you will work with `sleep` dataset provided with base `R` installation.
+
+```{r B1_data}
+data(sleep)
+sleep
+```
+
+It consists of two sets of measurements of efficacy of a soporofic drug (supposed to increase hours of sleep compared to control) for $10$ subjects. Note that `group` column does not specify independent
+groups but indexes different measurements for the same subject as defined by `ID` column. The dependent variable is of course column `extra`.
+
+Test the efficacy of the drug, which is supposed to increase hours of sleep, in terms of change in average values of increas of sleep hours. Formulate proper hypotheses, visualize data as necessary to choose proper statistical tests and construct an appropriate confidence interval.
+
+**Note.** It is not clear from the documentation what exactly `extra` measures (whether it is a change in hours of sleep, but with respect to what, or something else), but it does not matter for us in this exercise
+as it does not affect the statistical procedure.
+
+SOLUTION
+
+I will start with data processing to make statistical procedure easier
+
+```{r data handling}
+data_wide <- spread(sleep, group, extra) 
+#Here I transform data to wide format to group subjects more elegantly
+names(data_wide) <- c("ID", "group1", "group2")
+data_wide$difference = data_wide$group1-data_wide$group2
+summary(data_wide)
+```
+
+Next I visualize the data to show how results for group1 and group2 are distributed
+
+``` {r B1 data visualization}
+colors <- c("group1" = "blue", "group2" = "red")
+
+ggplot(data_wide, aes(x = ID)) +
+    geom_point(aes(y = group1, color = "group1"), size=3) +
+    geom_point(aes(y = group2, color = "group2"), size=3) +
+    labs(x = "Group1 vs Group2",
+         y = "ID",
+         color = "Legend") +
+    scale_color_manual(values = colors)
+```
+
+Score for each participant in group1 and group2
+
+``` {r B1 boxplots}
+boxplot(extra~group,
+data=sleep,
+main="Boxplots for each group",
+xlab="Group",
+ylab="Change in sleep time",
+col=(c("darkcyan","goldenrod1")),
+border="dimgrey"
+)
+```
+
+Boxplots for each group
+
+In order to choose a statistical test, I have to conduct normality test, because the sample is too small $(n=10)$
+
+I use Q-Q plot to assess normal distribution
+
+``` {r B1 normality distribution test}
+ggqqplot(data_wide$group1)
+ggqqplot(data_wide$group2)
+ggqqplot(data_wide$difference)
+```
+
+All point fall more or less along the reference line with exception in one point, but the distribution is still 'normal' enough to perform a paired t-test
+
+Here I define null hypothesis and alternative hypothesis, where $\bar{d} = \bar{x}_2 - \bar{x}_1$ is mean difference between second and first group.
+
+$$
+H_0: \bar{d} \leq 0 
+\\H_1: \bar{d} > 0
+$$
+
+Due to the fact that we do not know true mean and true variance, sample is small and data can be considered as normal distribution, I will use a paired t-test (degrees of freedom = 9)
+
+``` {r test statistic}
+data1 <- data_wide$group1
+data2 <- data_wide$group2
+
+t <- t.test(data2, data1, paired = TRUE, alternative = "greater")
+t
+```
+
+P-value is equal to $0.001416$ and is less than alpha $p-value < 0.05$, then we can reject $H_0$
+Confidence interval equals $[0.8669947, \infty]$. 
+
+
+<hr>
+The mean in the first sample was $0.75$ $(s^2 = 3.2, n=10)$ and in the second sample $2.33$ $(s^2 = 4, n=10)$. A two-sided t test for paired observations showed that the true difference in means is bigger than $0$, $t(9)=4.0621$, $p-value = 0.001416$. $95$% one sided confidence interval was $[0.8669947, \infty]$
+
+
+### B2
+
+In this exercise you will work with `chickwts` dataset of measurements of chicken weights in $6$ independent groups fed with different types of food.
+
+```{r B2_data}
+data(chickwts)
+head(chickwts)
+```
+
+Your task is to compare all groups with each other in pairs. Choose a proper test for such comparisons. 
+Use significance level $\alpha = 0.05$.
+
+How many test do you have to run? 
+
+This time you have to choose a proper test and justify your choice, but you do not have to report results. 
+Instead, consider whether what you did is correct in terms of statistics. 
+In particular, think about the type I error rate. Is it fixed for the set of all tests? 
+Is the probability of observing one or more type I errors (rejecting $H_0$ when it is true) $\alpha = 0.05$ 
+or does it change somehow due to the fact that you run multiple tests?
+
+If you can, try to estimate what is the probability of observing at least one type I error assuming that 
+null hypothesis is true in all cases. Assume that all tests are independent from each other
+(which makes sense if $H_0$ holds in every case).
+
+
+SOLUTION
+
+Here I start with plotting the data to see how the mean weight is distributes across feeds.
+
+``` {r visualizing data}
+boxplot(weight~feed,
+data=chickwts,
+las=2,
+main="Boxplots for each feed",
+xlab="Feed",
+ylab="Weight",
+col=(c("darkcyan","goldenrod1", "darkred", "mediumseagreen", "cadetblue1", "brown3")),
+border="dimgrey"
+)
+```
+
+To pick the right test I have to assess normality of distribution, because the sample is not big enough.
+
+``` {r normality test}
+ggqqplot(subset(chickwts, feed == "horsebean")$weight, title = "horsebean")
+ggqqplot(subset(chickwts, feed == "casein")$weight, title = "casein")
+ggqqplot(subset(chickwts, feed == "linseed")$weight, title = "linseed")
+ggqqplot(subset(chickwts, feed == "meatmeal")$weight, title = "meatmeal")
+ggqqplot(subset(chickwts, feed == "soybean")$weight, title = "soybean")
+ggqqplot(subset(chickwts, feed == "sunflower")$weight, title = "sunflower")
+
+shapiro.test(subset(chickwts, feed == "horsebean")$weight)
+shapiro.test(subset(chickwts, feed == "sunflower")$weight)
+```
+
+From the plots we can see that the data is distributed more or less normally. To be sure I performed Shapiro-Wilk normality test for sunflower and horsebean and both results indicate that the distribution is pretty much normal.
+With those results we can perform a pairwise t test.
+
+My task is to compare means of 6 groups in pairs. Then my hypotheses for each comparison would be:
+
+$$
+H_0: \mu_i - \mu_j = 0
+\\H_1: \mu_i - \mu_j \neq 0
+$$
+``` {r number of tests}
+choose(n=6,k=2)
+```
+
+The number of tests we will run is $15$.
+While running multiple tests, $15$ in our case, we have $15$ possible Type I errors. 
+Probability of obtaining at least one type 1 error with $\alpha = 0.05$ and independent tests equals
+$\\1 - (1-0.05)^{15} \approx 0.54\\$
+There is a $54$% chance of rejecting a true null hypothesis in at least one test, assuming that null hypothesis is true in all cases. This is far below significance level $\alpha = 0.05\\$
+This is why we have to adjust p-value to minimise the risk of Type I error.
+
+``` {r pairwise t test}
+pairwise.t.test(chickwts$weight, chickwts$feed, alternative="two.sided", p.adj="bonferroni")
+```
+
+
+I used Bonferonni correction, because the test number is not so big and we do not have to worry about big Type II error which is associated with using Bonferonni while having large test number.
+
+<hr>
+
+### B3
+
+In this exercise you will work with a dataset about hair and eye colors in a group of students. 
+It has a form of a 3-dimensional array (two tables stacked one on top of another).
+
+Aggregate the data so it is not split by sex and run a test to check whether hair and eye colors are independent. Would you trust results of the same test for individual sexes to the same extent as previously? Justify your answer.
+
+**HINT.** Warnings thrown by `R` can be insightful here.
+
+SOLUTION
+
+```{r B3_data}
+data(HairEyeColor)
+data_agg <- apply(HairEyeColor, c(1, 2), sum)
+data_agg
+```
+
+``` {r data visualization}
+mosaicplot(data_agg, main = "Hair/Eye color", shade = TRUE)
+```
+
+Assuming the data was random, blue color in the plot means that the observed value is higher than the expected value and red color indicates that the observed value is lower than the expected value.
+
+$$
+H_0: \text {Hair and eye color are independent}
+\\H_1: \text {Hair and eye color are dependent from each other}
+$$
+
+Expected values:
+
+``` {r expected values}
+data_e <- data_agg
+for (row in 1:length(data_agg[,1])) {
+  for (column in 1:length (data_agg[1,])){
+    data_e[row,column] <- round((sum(data_agg[row,])*sum(data_agg[,column]))/ sum(data_agg))
+  }
+}
+data_e
+```
+
+In order to test independence I will perform a $\chi^2$ test, as it is the best for joint distributions of pairs of categorical variables and expected value of each cell is more than 5 (so it is big enough). 
+$\alpha = 0.05$
+
+``` {r test}
+chisq.test(data_agg)
+chisq.test(x = data_agg, p = data_e / sum(data_e))
+```
+
+I calculated $\chi^2$ test with and without my calculated expected values just to be sure it is done right. We can see that they are the same.
+Obtained $p-value < 2.2e-16 < 0.05$ indicates that the $H_0$ can be rejected.
+
+``` {r male/female expected values}
+female <- HairEyeColor[,,"Female"]
+male <- HairEyeColor[,,"Male"]
+
+data_f <- data_agg
+for (row in 1:length(female[,1])) {
+  for (column in 1:length (female[1,])){
+    data_f[row,column] <- round((sum(female[row,])*sum(female[,column]))/ sum(female))
+  }
+}
+data_f
+
+data_m <- data_agg
+for (row in 1:length(male[,1])) {
+  for (column in 1:length (male[1,])){
+    data_f[row,column] <- round((sum(male[row,])*sum(male[,column]))/ sum(male))
+  }
+}
+data_m
+```
+
+Below I try to perform the same test for each of the sexes separately. However, we cannot trust these results, because the sample sizes in some cases is too small. $\chi^2$ test should be applied when expected value of each cell is more than 5, and this is not the case.
+
+``` {r}
+chisq.test(female)
+chisq.test(male)
+```
+
+Final report:
+A $\chi^2$ test was performed on categorical variables to test their independence with degrees of freedom $df = 9$. The results are: $\chi^2 = 138.29$, $p-value < 2.2e-16$. $p-value < 0.05$ indicates that $H_0$ can be rejected, meaning that hair and eye color in our data have significant association and therefore are not independent.
+
+<hr>
+
+### B4
+
+You will work with `iris` dataset of measurements of petal and sepal lenghts and widths for three different species of _iris_ flowers.
+
+```{r B4_data}
+head(iris)
+```
+
+Check whether sepals of _setosa_ flowers are on average longer in than those of _virginica_. 
+Choose a proper test and hypothesis. Use $\alpha = 0.01$.
+
+Report results correctly and visualize them in manner that clearly presents your results.
+
+**NOTE.** There are good ways to visualize results. Anything that is legible and presents the results will be accepted.
+
+SOLUTION
+
+```{r data preparation}
+setosa <- subset(iris, Species == "setosa")
+virginica <- subset(iris, Species == "virginica")
+v_mean <- mean(virginica$Sepal.Length)
+s_mean <- mean(setosa$Sepal.Length)
+var_v <- var(virginica$Sepal.Length)
+var_s <- var(setosa$Sepal.Length)
+n_v <- length(virginica$Sepal.Length)
+n_s <- length(setosa$Sepal.Length)
+summary(iris)
+```
+
+Hypotheses:
+
+$$
+H_0: \mu_s \leq \mu_v 
+\\H_1: \mu_s > \mu_v
+\\\alpha = 0.01
+$$
+
+Here I visualize data to see how mean length of sepals varies for setosa and virginica.
+
+``` {r boxplot}
+boxplot(setosa$Sepal.Length, virginica$Sepal.Length,
+main="Boxplots for two species",
+names = c("setosa", "virginica"),
+xlab="Species",
+ylab="Sepal Length",
+col=(c("darkcyan","goldenrod1")),
+border="dimgrey"
+)
+```
+
+
+``` {r}
+ggqqplot(setosa$Sepal.Length)
+ggqqplot(virginica$Sepal.Length)
+```
+
+Samples are big enough, so I can perform z-test. However, to be sure I plot data on QQ plots to assess normality of distribution. Here we can see that the data distribution is close enough to normal.
+$z=\frac{\bar{x_s} - \bar{x_v} - \Delta} {\sqrt{\frac {s_s^2} {n_s} + \frac {s_v^2} {n_v}}} \sim N (0,1)$
+
+``` {r}
+dbar   <- s_mean - v_mean                    
+s_dbar <- sqrt(var_s/n_s + var_v/n_v)        
+z      <- dbar / s_dbar
+alpha <- 0.01
+qnorm(1-alpha)
+```
+
+$z-score = -15.3862$
+
+Constructing rejection region for $\alpha = 0.01$:
+
+$q_z^{0.99} \approx 2.326$
+then rejection region is $R=[2.326, \infty]$
+z-score $(-15.3862)$ doesn't fall into $[2.326, \infty]$ but to make proper judgments I will calculate p-value.
+
+``` {r}
+alpha <- 0.01
+q_upper <- qnorm(1-alpha)
+
+data <- tibble(
+  x = seq(-5,5, by=.01),
+  fx = dnorm(x, mean = 0, sd = 1),
+  is_rejection = abs(x) >= qnorm(1-alpha, mean = 0, sd = 1)
+)
+
+ggplot(data, aes(x=x, y=fx)) +
+  geom_ribbon(aes(ymin = 0, ymax = fx), alpha = .2) +
+  geom_vline(aes(xintercept = 0)) +
+  geom_vline(aes(xintercept = q_upper), color = "red") + 
+  geom_vline(aes(xintercept = z),linetype=2, color = "red") +
+  annotate("label", x = q_upper-3, y = dnorm(q_upper)+0.05, label = sprintf("z > %.2f: upper rejection region", q_upper), hjust = .10) +
+  annotate("label", x = z+1, y = .35, label = "Test statistic") 
+```
+
+Visualization of rejection region
+
+```{r}
+pvalue <- 1 - pnorm(z)
+pvalue
+```
+
+Here I choose a right way to calculate p-value with regard to null hypothesis and we can see it is 1
+
+One-sided confidence interval is $CI^{one-sided}_{1-\alpha} = [-1.82, \infty]$
+
+``` {r}
+dbar - q_upper*s_dbar
+```
+
+p-value is bigger than alpha, so we cannot reject $H_0$
+
+Final report:
+The mean in the setosa sample was $5.006$ $(s^2 \approx 0.12, n = 50)$ and in the virginica sample $6.588$ $(s^2 \approx 0.4, n = 50)$. A one-sided z-test showed that the setosa mean is not statistically significantly bigger than virginica mean, $z-score = -15.3862$, $p-value \approx 1$. 99% one-sided confidence interval is $[-1.82, \infty]$
+
+
+<hr>
+
+### B5
+
+In this exercise you will work with `diamonds` dataset. It consists of many different measurements for a set $53 940$ diamonds of different types and quality.
+However, here you are interested in the correlation between `carat` and `price`.
+
+````{r B5_data}
+head(diamonds)
+```
+
+Consider _cuts_ of diamonds which is a jargon term of general quality.
+
+```{r B5_cuts}
+table(diamonds$cut)
+```
+
+First, create a new column in which you define a simplified classification based on cuts. 
+Specifically, you should collapse `Fair`, `Good` and `Very Good` together and join `Premium` and `Ideal` 
+so they make a second class. Use your new classification to test if the correlation between `carat` and `price` 
+is the same in both groups.
+
+Try to report your results in a reasonable way. They should be more or less understandable for a lay person, 
+but also provide more finely-grained details. In particular, you should somehow show how much uncertainty there is 
+around your best point estimate.
+
+
+SOLUTION
+
+```{r B5_solution}
+diamonds$cut2 <- ifelse(diamonds$cut == "Premium" | diamonds$cut == "Ideal", "Amazing", "Great")
+amazing <- subset(diamonds, cut2 == "Amazing")
+great <- subset(diamonds, cut2 == "Great")
+n_a <- length(amazing$price)
+n_g <- length(great$price)
+table(diamonds$cut2)
+```
+
+Here I join 'Premium' and 'Ideal' to one category: 'Amazing' and the rest ('Fair', 'Good' and 'Very Good') to 'Great'
+
+To pick a test for correlation I have to assess distribution of each group
+
+``` {r normality}
+ggqqplot(amazing$price, title = "Amazing: price")
+ggqqplot(amazing$carat, title = "Amazing: carat")
+ggqqplot(great$price, title = "Great: price")
+ggqqplot(great$carat, title = "Great: carat")
+```
+
+The distribution is not normal, therefore, I will conduct a Spearman rank test
+
+Hypotheses:
+$\rho_a$ means correlation coefficient in 'amazing' group, and $\rho_g$ in 'great' group
+
+$$
+H_0: \rho_a = \rho_g 
+\\H_1: \rho_a \neq \rho_g 
+$$
+
+``` {r}
+rho_a <- cor(amazing$carat, amazing$price, method = "spearman")
+rho_g <- cor(great$carat, great$price, method = "spearman")
+```
+
+We can see that $\rho_a \approx 0.959$ and $\rho_g \approx 0.962$ which are both extremely strong results.
+
+Here I visualize raw data to present how it is distributed in terms of linear combination.
+
+``` {r}
+ggplot(amazing, aes(x = carat, y = price)) +
+geom_point() +
+labs(title="Amazing")+
+geom_smooth(method = "lm", formula = y ~ x, se = FALSE)
+
+ggplot(great, aes(x = carat, y = price)) +
+geom_point() +
+labs(title="Great")+
+geom_smooth(method = "lm", formula = y ~ x, se = FALSE)
+```
+
+Here I visualize rank data which may give better view on how they are correlated.
+
+``` {r}
+ggplot(amazing, aes(x = rank(carat), y = rank(price))) +
+geom_point() +
+labs(title="Amazing")+
+geom_smooth(method = "lm", formula = y ~ x, se = FALSE)
+
+ggplot(great, aes(x = rank(carat), y = rank(price))) +
+geom_point() +
+labs(title="Great")+
+geom_smooth(method = "lm", formula = y ~ x, se = FALSE)
+```
+
+Next I will show an uncertainty estimate of our best point estimates $(\rho_a \approx 0.959$ and $\rho_g \approx 0.962)$ with bootstrap.
+
+``` {r B5 uncertainty}
+set.seed(1910)
+rho_boot_a <- boot(
+    data = amazing,
+    statistic = function(data, idx) {
+        data <- data[idx,]  
+        cor(data$carat, data$price, method = "spearman")
+    },
+    R = 1000
+)
+rho_boot_a
+
+set.seed(1910)
+rho_boot_g <- boot(
+    data = great,
+    statistic = function(data, idx) {
+        data <- data[idx,]  
+        cor(data$carat, data$price, method = "spearman")
+    },
+    R = 1000
+)
+rho_boot_g
+```
+
+``` {r bootstrap distribution}
+quantile(rho_boot_a$t, probs = c(.025, 0.975))
+quantile(rho_boot_g$t, probs = c(.025, 0.975))
+```
+
+Confidence interval for correlation coefficients:
+$CI^{0.95}_a = [0.9585334, 0.9604204]$
+
+$CI^{0.95}_g = [0.9611011, 0.9637145]$
+
+
+Next step is transforming $\rho$ coefficients so that they become normally distributed and I can test $H_0$ using the statistical tests I already know, i.e. z-test. To do so I will perform Fisher Z-transformation $\rho'$. It is usually performed on r Pearson coeffitients, however, it also works for Spearman $\rho$.
+
+``` {r Fisher z transformation}
+z_a <- 0.5*(log(1+rho_a) - log(1-rho_a))
+z_a
+z_g <- 0.5*(log(1+rho_g) - log(1-rho_g))
+z_g
+```
+
+The calculated z-scores are:
+$\rho_a \rightarrow z-score_a =1.939567$
+$\rho_g \rightarrow z-score_g =1.977675$
+
+'Amazing' and 'great' groups have both large samples, so Fisher transformation $\rho' \sim N(\rho', s_{\rho'})$ and $s_{\rho'} = \frac {1} {\sqrt{n-3}}$.
+Moreover, $\rho_a$ and $\rho_g$ are based on independent samples and $H_0 : \rho_a = \rho_g$. Then $z_{obs} \sim N(0,1)$, where $z_{obs}= \frac {z_a - z_g} {s}$ and $s = \sqrt{\frac {1}{n_a-3} + \frac {1}{n_g-3}}$
+
+``` {r}
+se_diff <- sqrt(1/(n_a - 3) + 1/(n_g - 3))
+z_obs <- (z_a - z_g) / se_diff
+z_obs
+```
+
+Visualizing rejection region for $\alpha = 0.05$ and $z_{obs} = -4.206466$
+
+``` {r B5 rejection region}
+alpha        <- 0.05                  
+q_lower_tail <- qnorm(alpha/2)        
+q_upper_tail <- qnorm(1 - alpha/2)    
+
+
+tibble(
+    Z         = seq(-5, 5, by = .01),
+    density   = dnorm(Z),
+    lower     = Z <= q_lower_tail,
+    upper     = Z >= q_upper_tail,
+    rejection = lower | upper 
+) %>%
+    ggplot(aes(x = Z, y = density)) +
+    geom_ribbon(data = . %>% filter(lower), aes(ymax = density, ymin = 0, fill = rejection), alpha = .75) +
+    geom_ribbon(data = . %>% filter(upper), aes(ymax = density, ymin = 0, fill = rejection), alpha = .75) +
+    geom_ribbon(data = . %>% filter(!rejection), aes(ymax = density, ymin = 0, fill = rejection), alpha = .75) +
+    geom_vline(aes(xintercept = z_obs), linetype = 2) +
+    annotate("label", x = z_obs, y = .35, label = "Test statistic") +
+    annotate("label", x = q_lower_tail, y = dnorm(q_lower_tail), label = sprintf("z_obs < %.2f: lower rejection region", q_lower_tail), hjust = .8) +
+    annotate("label", x = q_upper_tail, y = dnorm(q_upper_tail), label = sprintf("z_obs > %.2f: upper rejection region", q_upper_tail), hjust = .2) +
+    guides(fill = FALSE) +
+    scale_fill_manual(values = c("gray70", "red")) +
+    labs(y = "Probability density")
+```
+
+Rejection region is $R = [-\infty, -1.96] \cup [1.96, \infty]$ and we can see that our $z-score = -4.206466$ belongs to that region. However, to be sure that we can reject $H_0$, I will calculate p-value.
+
+``` {r B5 p-value}
+pnorm(-abs(z_obs)) + (1 - pnorm(abs(z_obs)))
+```
+
+$p-value < 2.593949e-05 < alpha=0.05$, therefore $H_0$ can be rejected. 
+
+Next I will calculate confidence interval.
+
+``` {r CI B5}
+(z_a-z_g) + c(q_lower_tail, q_upper_tail) * se_diff
+```
+
+Confidence interval equals to:
+$CI_{\alpha}=[-0.05586501 -0.02035227]$ and it does not contain $0$ ($H_0$), which means that we can reject $H_0$, which is consistent with previous findings.
+
+Final report:
+The Spearman correlation coefficient $\rho$ in the first sample was $0.959$ $(n = 35342)$ and in the second sample $0.962$ $(n = 18598)$. With Fisher $\rho$ to z transformation $z-score=1.94$ for the first sample and $z-score=1.98$ for the second sample was calculated. A two-sided z-test showed that the difference is statistically significant, as $H_0$ can be rejected. $z-score_{obs} = -4.206$, $p-value < 2.593949e-05$. $95$% two-sided confidence interval is $CI_{0.95}=[-0.05586501 -0.02035227]$
+
